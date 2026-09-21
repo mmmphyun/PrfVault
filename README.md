@@ -57,3 +57,5 @@ flowchart TD
 * [`docs/02-threat-model-and-tradeoffs.md`](docs/02-threat-model-and-tradeoffs.md): STRIDE 위협 모델 및 한국형 보안 솔루션 간섭 분석
 * [`docs/03-benchmark-and-dataset-plan.md`](docs/03-benchmark-and-dataset-plan.md): 50대 사이트 벤치마크 설계 및 Shannon Entropy 측정 공식
 * [`docs/04-implementation-roadmap.md`](docs/04-implementation-roadmap.md): 구현 마일스톤 및 테스팅 계획
+* [`docs/05-ipc-and-manifest-spec.md`](docs/05-ipc-and-manifest-spec.md): Chrome MV3 manifest 최소 권한 및 내부 IPC 메시지 패싱 명세
+* [`docs/06-webauthn-prf-exception-flow.md`](docs/06-webauthn-prf-exception-flow.md): WebAuthn PRF 호환성 사전 감지 및 예외 처리 흐름도

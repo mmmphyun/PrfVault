@@ -74,15 +74,64 @@ sequenceDiagram
 
 ## 3. 데이터 암호화 및 무결성 보장
 
-* **암호화 알고리즘**: AES-256-GCM (Authenticated Encryption with Associated Data).
-* **Nonce(IV) 정책**: 저장할 때마다 96비트 CSPRNG 기반 고유 Nonce를 새로 생성한다.
-* **AAD(Additional Authenticated Data)**: 확장프로그램 고유 ID(`chrome.runtime.id`)와 볼트 스키마 버전을 AAD로 묶어 타 확장프로그램에 의한 볼트 데이터 교체(스왑) 공격을 막는다.
-* **데이터 포맷 (바이트 레이아웃)**:
-  ```
-  +-------------------+----------------+----------------+--------------------+----------------+
-  | Schema Ver (2B)   | Salt (32B)     | IV/Nonce (12B) | Ciphertext (Var)   | GCM Tag (16B)  |
-  +-------------------+----------------+----------------+--------------------+----------------+
-  ```
+### 3.1 암호화 알고리즘 및 키 유도 규격
+* **암호화 알고리즘**: AES-256-GCM (Authenticated Encryption with Associated Data, NIST SP 800-38D).
+* **HKDF-SHA-256 키 유도 규격 (RFC 5869)**:
+  * **IKM (Input Keying Material)**: WebAuthn PRF 출력 32바이트 (`PrfKey`).
+  * **Salt**: 볼트 헤더에 기록된 32바이트 `Salt`.
+  * **Info (Domain Separation)**: `b"PrfVault/v1/MasterEncryptionKey"` (ASCII 30바이트 고정 바이트열).
+  * **L (Output Key Length)**: 32바이트 (256비트 AES 마스터 키).
+* **Nonce(IV) 생성 규칙**: 매 암호화 시점마다 암호학적 난수 생성기(CSPRNG)를 통해 96비트(12바이트)를 독립 생성 (`aes-gcm` 표준 권장). 동일 키 하에서 Nonce 재사용은 치명적 보안 결함이므로 카운터 방식 대신 96비트 CSPRNG 난수를 적용.
+
+### 3.2 직렬화 바이트 레이아웃 (Binary Wire Format)
+모든 정수 필드는 **Big-Endian(Network Byte Order)**으로 인코딩한다.
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       Schema Ver (2B)         |                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               +
+|                          Salt (32B)                           |
+|                              ...                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       IV / Nonce (12B)                        |
+|                              ...                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Ciphertext Length (4B)                    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                     Ciphertext (Var Bytes)                    |
+|                              ...                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                        GCM Tag (16B)                          |
+|                              ...                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+| 필드명 | 오프셋 (Bytes) | 크기 (Bytes) | 엔디안 | 설명 |
+| :--- | :--- | :--- | :--- | :--- |
+| `schema_version` | 0 | 2 | Big-Endian | 스키마 버전 (현재 `0x0001`) |
+| `salt` | 2 | 32 | N/A | PRF 및 HKDF용 CSPRNG 솔트 |
+| `nonce` | 34 | 12 | N/A | AES-256-GCM 96비트 IV |
+| `ciphertext_length`| 46 | 4 | Big-Endian | 가변 암호문 길이 ($L_c$, 바이트 단위) |
+| `ciphertext` | 50 | $L_c$ | N/A | 압축/직렬화된 JSON 평문의 암호화 바이트열 |
+| `tag` | $50 + L_c$ | 16 | N/A | 128비트 AES-GCM 인증 태그 |
+
+* **최소 유효 페이로드 크기**: $2 + 32 + 12 + 4 + 0 + 16 = 66\text{ 바이트}$. 66바이트 미만 수신 시 복호화 파이프라인 즉시 중단.
+
+### 3.3 AAD (Additional Authenticated Data) 바이너리 레이아웃
+스토리지 스와핑 공격 및 타 확장프로그램으로의 암호문 주입을 차단하기 위해 AES-GCM AAD에 메타데이터를 강제 바인딩한다.
+
+```
++------------------------+--------------------------+------------------------------+
+|  Schema Ver (2B, BE)   |  Ext ID Length (2B, BE)  |  chrome.runtime.id (ASCII)   |
++------------------------+--------------------------+------------------------------+
+```
+* **인코딩 규칙**:
+  * `schema_version`: Big-Endian 16비트 정수 (예: `0x0001`).
+  * `ext_id_length`: Big-Endian 16비트 정수 (Chrome Extension ID는 32글자 고정이므로 `0x0020`).
+  * `extension_id`: UTF-8/ASCII 바이트열 (32바이트, 예: `b"abcdefghijklmnop..."`).
+* 복호화 시 런타임 환경의 `chrome.runtime.id`와 불일치할 경우 AES-GCM Tag 검증이 수학적으로 실패하여 복호화 거부.
 
 ---
 
@@ -99,6 +148,11 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 pub struct VaultKey {
     key: [u8; 32],
 }
+
+#[derive(Zeroize, ZeroizeOnDrop)]
+pub struct SensitiveBuffer {
+    buffer: Vec<u8>,
+}
 ```
 
 ### 4.2 V8 JavaScript 힙의 메모리 잔류 한계와 완화책
@@ -108,6 +162,72 @@ pub struct VaultKey {
 * **완화 정책**:
   1. **수명 최소화**: 복호화한 평문 값은 전역 변수에 캐싱하지 않는다. DOM 주입 직후 스코프를 닫아 참조 카운트를 0으로 만든다.
   2. **Content Script 주입 격리**: 주입을 마치고 `input` 이벤트를 발생시킨 즉시 메모리 참조를 해제한다.
+
+### 4.3 TypeScript-Rust Wasm FFI C-ABI 및 메모리 바이트 인터페이스
+Wasm 선형 메모리의 무단 GC 복제를 방지하고 호출 간 메모리 소거 라이프사이클을 제어하기 위한 C-ABI 함수 명세:
+
+#### 저수준 메모리 수명 제어 ABI (Exported C Functions)
+```rust
+// 선형 메모리에 지정 크기 버퍼 할당 후 포인터 반환 (JS 측에서 쓰기용)
+#[no_mangle]
+pub unsafe extern "C" fn prf_vault_alloc(size: usize) -> *mut u8;
+
+// 버퍼를 0x00으로 소거(volatile write) 후 할당 해제
+#[no_mangle]
+pub unsafe extern "C" fn prf_vault_dealloc_zeroize(ptr: *mut u8, size: usize);
+```
+
+#### Wasm Exported 암복호화 핵심 API 시그니처
+```rust
+#[no_mangle]
+pub unsafe extern "C" fn prf_vault_derive_master_key(
+    prf_output_ptr: *const u8, // 32 바이트
+    salt_ptr: *const u8,       // 32 바이트
+    out_key_ptr: *mut u8,      // 32 바이트 버퍼 (호출자 할당)
+) -> i32;
+
+#[no_mangle]
+pub unsafe extern "C" fn prf_vault_encrypt(
+    key_ptr: *const u8,        // 32 바이트
+    aad_ptr: *const u8,        // AAD 시작 주소
+    aad_len: usize,            // AAD 바이트 길이
+    plaintext_ptr: *const u8,  // JSON 평문 바이트열
+    plaintext_len: usize,      // JSON 평문 길이
+    out_blob_ptr: *mut *mut u8,// 생성된 직렬화 볼트 버퍼 포인터 수신 포인터
+    out_blob_len: *mut usize,  // 생성된 직렬화 볼트 바이트 크기 수신 포인터
+) -> i32;
+
+#[no_mangle]
+pub unsafe extern "C" fn prf_vault_decrypt(
+    key_ptr: *const u8,        // 32 바이트
+    aad_ptr: *const u8,        // AAD 시작 주소
+    aad_len: usize,            // AAD 바이트 길이
+    blob_ptr: *const u8,       // 직렬화 볼트 시작 주소
+    blob_len: usize,           // 직렬화 볼트 바이트 길이
+    out_pt_ptr: *mut *mut u8,  // 복호화된 JSON 평문 버퍼 포인터 수신 포인터
+    out_pt_len: *mut usize,    // 복호화된 JSON 평문 바이트 길이 수신 포인터
+) -> i32;
+```
+
+#### FFI 반환 에러 코드 (Status Codes)
+| 반환 코드 | 심볼릭 상수 | 설명 |
+| :--- | :--- | :--- |
+| `0` | `SUCCESS` | 연산 성공 |
+| `-1` | `ERR_NULL_POINTER` | 인자로 널 포인터가 전달됨 |
+| `-2` | `ERR_INVALID_PAYLOAD_LEN`| 볼트 바이너리 크기가 최소 크기(66B) 미만이거나 길이 헤더 불일치 |
+| `-3` | `ERR_UNSUPPORTED_VERSION`| `schema_version`이 Wasm 코어 지원 버전을 초과함 |
+| `-4` | `ERR_TAG_VERIFICATION`  | AES-GCM 인증 태그 불일치 또는 AAD 변조 (복호화 실패) |
+| `-5` | `ERR_HKDF_FAILED`       | HKDF 키 유도 파라미터 또는 확장 실패 |
+| `-6` | `ERR_ALLOCATION_FAILED` | Wasm 선형 메모리 고갈 |
+
+#### TypeScript 바인딩 인터페이스 (`crypto-core.ts`)
+```typescript
+export interface CryptoCoreWasm {
+  deriveMasterKey(prfOutput: Uint8Array, salt: Uint8Array): Uint8Array;
+  encryptVault(key: Uint8Array, aad: Uint8Array, plaintextUtf8: Uint8Array): Uint8Array;
+  decryptVault(key: Uint8Array, aad: Uint8Array, encryptedBlob: Uint8Array): Uint8Array;
+}
+```
 
 ---
 
