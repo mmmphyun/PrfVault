@@ -1,0 +1,7 @@
+# PrfVault Gitleaks Ignore List
+# 이 파일에는 Gitleaks 검증 시 오탐(False Positive)으로 확인된 항목의 고유 지문(Fingerprint)을 등록합니다.
+# 지문 획득 방법:
+#   gitleaks protect --staged -v --config=.gitleaks.toml
+# 출력 결과의 'Fingerprint: <hash>' 값을 복사하여 아래에 추가합니다.
+#
+# 형식: <Fingerprint-SHA256> # <사유 및 티켓/커밋 번호>

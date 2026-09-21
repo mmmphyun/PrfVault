@@ -1,8 +1,22 @@
 #!/bin/sh
-# PrfVault Pre-commit Secret Scanner
-# Git Staged Area에 포함된 민감 정보(개인키, API 토큰, 엔트로피 비정상 문자열) 차단
+# PrfVault Pre-commit Security Hook & Agent Guardrail
+# 1. 차단 대상 확장자 검사 (PEM 개인키, CRX 패키지, 메모리 덤프)
+# 2. Gitleaks Staged Area 시크릿/엔트로피 정밀 검사
 
-# 1. gitleaks 바이너리 확인
+# [Guardrail 1] 금지된 파일 패턴 검사
+FORBIDDEN_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(pem|crx|dmp|dump|so)$|^core(\.[0-9]+)?$')
+if [ -n "$FORBIDDEN_FILES" ]; then
+    echo ""
+    echo "===================================================================="
+    echo "[SECURITY BLOCK] 커밋 대상에 보안 금지 파일이 포함되어 있습니다:"
+    echo "$FORBIDDEN_FILES"
+    echo "개인키(*.pem), 바이너리 패키지(*.crx), 메모리 덤프(*.dmp)는 커밋할 수 없습니다."
+    echo "===================================================================="
+    echo ""
+    exit 1
+fi
+
+# [Guardrail 2] gitleaks 바이너리 확인 및 스캔
 if ! command -v gitleaks >/dev/null 2>&1; then
     echo "[WARNING] 'gitleaks' 바이너리가 시스템 PATH에 없습니다."
     echo "[WARNING] 로컬 시크릿 스캔이 생략됩니다. 다음 명령으로 설치를 권장합니다:"
@@ -11,19 +25,19 @@ if ! command -v gitleaks >/dev/null 2>&1; then
     exit 0
 fi
 
-# 2. Staged 변경사항에 대해 시크릿 스캔 수행
-# -v: 상세 출력
-# --staged: git index(staged) 상태만 검사
-# --config: 프로젝트 루트의 .gitleaks.toml 적용
+# Staged 인덱스 변경분에 대해 Gitleaks 실행
 gitleaks protect --staged -v --config=.gitleaks.toml
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
     echo ""
     echo "===================================================================="
-    echo "[SECURITY BLOCK] 커밋 대상 파일에서 하드코딩된 시크릿이 감지되었습니다."
-    echo "1. 실제 비밀키/토큰인 경우 코드를 수정하여 환경변수로 격리하십시오."
-    echo "2. 테스트 벡터/모의 키인 경우 .gitleaks.toml의 allowlist에 등록하십시오."
+    echo "[SECURITY BLOCK] 커밋 대상 파일에서 하드코딩된 시크릿/고엔트로피 문자열 감지."
+    echo "오탐(False Positive) 판정 시 처리 절차:"
+    echo "  1. 탐지 로그에서 'Fingerprint: <hash>' 복사"
+    echo "  2. .gitleaksignore 파일에 해당 Fingerprint 추가 후 스테이징"
+    echo "  3. 또는 tests/fixtures/, tests/vectors/ 등 허용 디렉토리로 이동"
+    echo "주의: --no-verify를 사용한 우회는 CI 단계에서 원천 거부됩니다."
     echo "===================================================================="
     echo ""
     exit $EXIT_CODE

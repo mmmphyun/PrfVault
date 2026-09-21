@@ -5,17 +5,25 @@ title = "PrfVault Gitleaks Configuration"
 useDefault = true
 
 [allowlist]
-description = "Global allowlist for documentation, tests, and mock fixtures"
+description = "Global allowlist for documentation, tests, fixtures, and lockfiles"
 paths = [
     '''docs/''',
     '''tests/fixtures/''',
     '''tests/vectors/''',
-    '''\.gitleaks\.toml$'''
+    '''Cargo\.lock$''',
+    '''package-lock\.json$''',
+    '''pnpm-lock\.yaml$''',
+    '''\.gitleaks\.toml$''',
+    '''\.gitleaksignore$''',
+    '''README\.md$''',
+    '''AGENTS\.md$'''
 ]
 regexes = [
     '''(?i)example[_-]?key''',
     '''(?i)mock[_-]?token''',
-    '''(?i)dummy[_-]?secret'''
+    '''(?i)dummy[_-]?secret''',
+    '''(?i)nist[-_]cavp''',
+    '''(?i)test[-_]vector'''
 ]
 
 # PrfVault 맞춤형 탐지 룰: 암호화 개인키 및 인증서
