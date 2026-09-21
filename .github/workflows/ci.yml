@@ -1,0 +1,166 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # =========================================================================
+  # 1. 시크릿 및 고엔트로피 키 탐지 (Unbypassable Security Gate)
+  # =========================================================================
+  secret-scan:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  # =========================================================================
+  # 2. Rust Crypto Core 정적 분석 및 단위 테스트
+  # =========================================================================
+  rust-crypto-core:
+    name: Rust Crypto Core (Fmt, Clippy, Test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Manifest Existence
+        id: check_manifest
+        run: |
+          if [ -f "Cargo.toml" ] || [ -f "crates/crypto-core/Cargo.toml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Cargo.toml 미발견 - 단계 통과"
+          fi
+
+      - name: Setup Rust Toolchain
+        if: steps.check_manifest.outputs.exists == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Rust Cache
+        if: steps.check_manifest.outputs.exists == 'true'
+        uses: Swatinem/rust-cache@v2
+
+      - name: Cargo Fmt Check
+        if: steps.check_manifest.outputs.exists == 'true'
+        run: cargo fmt --all -- --check
+
+      - name: Cargo Clippy
+        if: steps.check_manifest.outputs.exists == 'true'
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Cargo Test (NIST Vectors & Zeroize)
+        if: steps.check_manifest.outputs.exists == 'true'
+        run: cargo test --all-targets --verbose
+
+  # =========================================================================
+  # 3. Wasm 컴파일 검증
+  # =========================================================================
+  wasm-build:
+    name: Wasm Pack Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Manifest Existence
+        id: check_manifest
+        run: |
+          if [ -f "Cargo.toml" ] || [ -f "crates/crypto-core/Cargo.toml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Cargo.toml 미발견 - 단계 통과"
+          fi
+
+      - name: Setup Rust with wasm32 Target
+        if: steps.check_manifest.outputs.exists == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        if: steps.check_manifest.outputs.exists == 'true'
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: 'latest'
+
+      - name: Build Wasm Module
+        if: steps.check_manifest.outputs.exists == 'true'
+        run: |
+          TARGET_DIR="."
+          if [ -d "crates/crypto-core" ]; then
+            TARGET_DIR="crates/crypto-core"
+          fi
+          wasm-pack build "$TARGET_DIR" --target web --release
+
+  # =========================================================================
+  # 4. Chrome Extension TypeScript 타입 검증 및 린트
+  # =========================================================================
+  extension-check:
+    name: Extension TS & Lint Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Package Existence
+        id: check_package
+        run: |
+          if [ -f "package.json" ]; then
+            echo "dir=." >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          elif [ -f "extension/package.json" ]; then
+            echo "dir=extension" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "package.json 미발견 - 단계 통과"
+          fi
+
+      - name: Setup Node.js
+        if: steps.check_package.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: '${{ steps.check_package.outputs.dir }}/package-lock.json'
+
+      - name: Install Dependencies
+        if: steps.check_package.outputs.exists == 'true'
+        run: |
+          cd ${{ steps.check_package.outputs.dir }}
+          npm ci
+
+      - name: TypeScript Type Check
+        if: steps.check_package.outputs.exists == 'true'
+        run: |
+          cd ${{ steps.check_package.outputs.dir }}
+          npx tsc --noEmit
+
+      - name: Lint Check
+        if: steps.check_package.outputs.exists == 'true'
+        run: |
+          cd ${{ steps.check_package.outputs.dir }}
+          npm run lint --if-present
