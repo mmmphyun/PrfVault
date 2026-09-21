@@ -172,8 +172,10 @@
       if (hasWebAuthn && typeof PublicKeyCredential.getClientCapabilities === "function") {
         try {
           const caps = await PublicKeyCredential.getClientCapabilities();
+          log(`클라이언트 Capabilities: ${JSON.stringify(caps)}`);
           prfCap = !!caps["extension:prf"];
         } catch (e) {
+          log(`Capabilities 조회 실패: ${e.message}`);
           prfCap = "unknown";
         }
       }
@@ -193,7 +195,11 @@
       try {
         log("Windows Hello 등록 요청 (navigator.credentials.create)...");
         const challenge = crypto.getRandomValues(new Uint8Array(32));
-        const userId = crypto.getRandomValues(new Uint8Array(16));
+        // 패스키 중복 누적 방지를 위해 고정 userId 사용
+        const userId = new TextEncoder().encode("prfvault-spike-user");
+
+        crypto.getRandomValues(lastSalt);
+        log(`등록 시 초기 Salt 생성 (32B): ${toHex(lastSalt)}`);
 
         const cred = await navigator.credentials.create({
           publicKey: {
@@ -205,17 +211,24 @@
               displayName: "PrfVault Local User"
             },
             pubKeyCredParams: [
-              { type: "public-key", alg: -7 },   // ES256
-              { type: "public-key", alg: -257 }  // RS256
+              { type: "public-key", alg: -257 }, // 1순위: RS256 (Intel PTT 및 레거시 TPM 호환)
+              { type: "public-key", alg: -7 },   // 2순위: ES256 (NIST P-256 타원곡선)
+              { type: "public-key", alg: -37 },  // 3순위: PS256
+              { type: "public-key", alg: -8 }    // 4순위: Ed25519
             ],
             authenticatorSelection: {
               authenticatorAttachment: "platform",
               userVerification: "required",
-              residentKey: "preferred"
+              residentKey: "required"
             },
             timeout: 60000,
             extensions: {
-              prf: {}
+              prf: {
+                eval: {
+                  first: lastSalt
+                }
+              },
+              hmacCreateSecret: true
             }
           }
         });
@@ -223,8 +236,17 @@
         const extResults = cred.getClientExtensionResults();
         log(`WebAuthn 확장 반환 결과: ${JSON.stringify(extResults)}`);
 
+        if (extResults.hmacCreateSecret) {
+          log('[INFO] FIDO2 hmacCreateSecret 활성화 확인됨');
+        }
+
         if (extResults.prf && extResults.prf.enabled) {
           log('[SUCCESS] PRF 확장 활성화 확인됨! (prf.enabled = true)');
+          if (extResults.prf.results && extResults.prf.results.first) {
+            lastPrfKey = new Uint8Array(extResults.prf.results.first);
+            log(`[SUCCESS] 등록 시 동시 유도된 PRF 키 (Hex, 32B): ${toHex(lastPrfKey)}`);
+            btnWasmCrypto.disabled = false;
+          }
         } else {
           log('<span class="badge-warn">[WARN] prf.enabled 가 false이거나 반환되지 않았습니다. (하드웨어/드라이버 미지원 가능성)</span>');
         }
@@ -269,6 +291,9 @@
                 eval: {
                   first: lastSalt
                 }
+              },
+              hmacGetSecret: {
+                salt1: lastSalt
               }
             }
           }
@@ -277,13 +302,21 @@
         const extResults = assertion.getClientExtensionResults();
         log(`인증 확장 반환: ${JSON.stringify(extResults)}`);
 
+        let derivedBuffer = null;
         if (extResults.prf && extResults.prf.results && extResults.prf.results.first) {
-          lastPrfKey = new Uint8Array(extResults.prf.results.first);
-          log('[SUCCESS] 32바이트 하드웨어 PRF 키 유도 성공!');
-          log(`PRF 유도 키 (Hex, 32B): ${toHex(lastPrfKey)}`);
+          derivedBuffer = extResults.prf.results.first;
+        } else if (extResults.hmacGetSecret && extResults.hmacGetSecret.output1) {
+          derivedBuffer = extResults.hmacGetSecret.output1;
+          log('[INFO] FIDO2 hmacGetSecret(output1)으로부터 키를 획득했습니다.');
+        }
+
+        if (derivedBuffer) {
+          lastPrfKey = new Uint8Array(derivedBuffer);
+          log('[SUCCESS] 32바이트 하드웨어 대칭키 유도 성공!');
+          log(`유도된 키 (Hex, 32B): ${toHex(lastPrfKey)}`);
           btnWasmCrypto.disabled = false;
         } else {
-          log('[FAIL] PRF 결과(first)가 반환되지 않았습니다.');
+          log('[FAIL] PRF/hmac-secret 결과가 반환되지 않았습니다.');
         }
       } catch (err) {
         log(`PRF 유도 실패: ${err.name} - ${err.message}`);
