@@ -1,0 +1,32 @@
+# PrfVault Gitleaks Configuration
+title = "PrfVault Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist for documentation, tests, and mock fixtures"
+paths = [
+    '''docs/''',
+    '''tests/fixtures/''',
+    '''tests/vectors/''',
+    '''\.gitleaks\.toml$'''
+]
+regexes = [
+    '''(?i)example[_-]?key''',
+    '''(?i)mock[_-]?token''',
+    '''(?i)dummy[_-]?secret'''
+]
+
+# PrfVault 맞춤형 탐지 룰: 암호화 개인키 및 인증서
+[[rules]]
+id = "crypto-private-key"
+description = "감지됨: PKCS#8 또는 Raw PEM 개인키"
+regex = '''-----BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY-----'''
+tags = ["key", "crypto"]
+
+[[rules]]
+id = "raw-hex-symmetric-key"
+description = "감지됨: 하드코딩된 256비트 Hex 문자열 (AES-256 / HKDF 키 의심)"
+regex = '''(?i)(aes_key|encryption_key|master_key|prf_key)\s*[:=]\s*["'][0-9a-f]{64}["']'''
+tags = ["crypto", "vault"]
