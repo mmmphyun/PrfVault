@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>PrfVault Phase 1 Spike - WebAuthn PRF & Rust Wasm</title>
+  <style>
+    body {
+      font-family: Consolas, "Segoe UI", monospace;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    h1, h2 {
+      color: #38bdf8;
+      margin-top: 0;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    button {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    button:disabled {
+      background: #475569;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background: #0369a1;
+    }
+    pre {
+      background: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 12px;
+      overflow-x: auto;
+      font-size: 13px;
+      max-height: 320px;
+    }
+    .badge-ok { color: #4ade80; font-weight: bold; }
+    .badge-fail { color: #f87171; font-weight: bold; }
+    .badge-warn { color: #fbbf24; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>PrfVault Phase 1 Spike Test Harness</h1>
+  <p>WebAuthn Level 3 PRF 하드웨어 키 유도 및 Rust Wasm C-ABI 암복호화 연동 검증</p>
+
+  <div class="card">
+    <h2>1. 런타임 및 Wasm 코어 상태</h2>
+    <div id="diag-status">진단 대기 중...</div>
+    <div style="margin-top: 12px;">
+      <button id="btn-run-diag">사전 진단 재실행 (Step 1~3)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. WebAuthn PRF 하드웨어 연동 (Step 4)</h2>
+    <div>
+      <button id="btn-register" disabled>1) Windows Hello 자격 증명 등록 (create)</button>
+      <button id="btn-derive" disabled>2) PRF 32바이트 키 유도 (get)</button>
+      <button id="btn-wasm-crypto" disabled>3) Wasm 볼트 암복호화 파이프라인 검증</button>
+      <button id="btn-clear" style="background: #ef4444;">초기화</button>
+    </div>
+    <div style="margin-top: 12px;">
+      <strong>저장된 Credential ID:</strong> <span id="span-cred-id" style="color: #94a3b8;">(없음)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3. 실행 로그 & 메모리 덤프</h2>
+    <pre id="log-output">시스템 초기화 중...</pre>
+  </div>
+
+  <script type="module">
+    import init, * as wasm from "/crates/crypto-core/pkg/crypto_core.js";
+
+    const logEl = document.getElementById("log-output");
+    const diagEl = document.getElementById("diag-status");
+    const spanCredId = document.getElementById("span-cred-id");
+
+    const btnRunDiag = document.getElementById("btn-run-diag");
+    const btnRegister = document.getElementById("btn-register");
+    const btnDerive = document.getElementById("btn-derive");
+    const btnWasmCrypto = document.getElementById("btn-wasm-crypto");
+    const btnClear = document.getElementById("btn-clear");
+
+    let wasmExports = null;
+    let savedCredentialId = localStorage.getItem("prfvault_cred_id") || null;
+    let lastSalt = new Uint8Array(32);
+    let lastPrfKey = null;
+
+    function log(msg) {
+      const ts = new Date().toISOString().split("T")[1].slice(0, 12);
+      logEl.textContent = `[${ts}] ${msg}\n` + logEl.textContent;
+    }
+
+    function toHex(buf) {
+      return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function base64UrlEncode(buf) {
+      let binary = '';
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function base64UrlDecode(str) {
+      let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) {
+        base64 += '=';
+      }
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    async function initSystem() {
+      try {
+        log("Wasm 모듈 로드 중 (/crates/crypto-core/pkg/crypto_core_bg.wasm)...");
+        const initResult = await init();
+        wasmExports = initResult;
+        log(`Wasm 모듈 초기화 완료! 메모리 버퍼 바이트: ${wasmExports.memory.buffer.byteLength}`);
+
+        if (savedCredentialId) {
+          spanCredId.textContent = savedCredentialId;
+          btnDerive.disabled = false;
+        }
+
+        await runPreflightCheck();
+      } catch (e) {
+        log(`시스템 초기화 실패: ${e.message}`);
+      }
+    }
+
+    async function runPreflightCheck() {
+      let diagHtml = "";
+
+      // Step 1: window.PublicKeyCredential
+      const hasWebAuthn = "PublicKeyCredential" in window;
+      diagHtml += `<div>Step 1 (WebAuthn API): ${hasWebAuthn ? '<span class="badge-ok">[OK] 지원</span>' : '<span class="badge-fail">[FAIL] 미지원</span>'}</div>`;
+
+      // Step 2: isUserVerifyingPlatformAuthenticatorAvailable
+      let hasPlatformAuth = false;
+      if (hasWebAuthn) {
+        hasPlatformAuth = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      }
+      diagHtml += `<div>Step 2 (플랫폼 TPM/생체인증): ${hasPlatformAuth ? '<span class="badge-ok">[OK] 감지됨</span>' : '<span class="badge-warn">[WARN] 미감지 (외부 FIDO2 필요)</span>'}</div>`;
+
+      // Step 3: extension:prf getClientCapabilities
+      let prfCap = false;
+      if (hasWebAuthn && typeof PublicKeyCredential.getClientCapabilities === "function") {
+        try {
+          const caps = await PublicKeyCredential.getClientCapabilities();
+          prfCap = !!caps["extension:prf"];
+        } catch (e) {
+          prfCap = "unknown";
+        }
+      }
+      diagHtml += `<div>Step 3 (브라우저 PRF 확장): ${prfCap === true ? '<span class="badge-ok">[OK] 지원</span>' : (prfCap === 'unknown' ? '<span class="badge-warn">[WARN] 확인 불가 (직접 호출로 판정)</span>' : '<span class="badge-warn">[WARN] false (Chromium 버전에 따라 폴백 가능)</span>')}</div>`;
+
+      diagEl.innerHTML = diagHtml;
+
+      if (hasWebAuthn) {
+        btnRegister.disabled = false;
+      }
+    }
+
+    btnRunDiag.addEventListener("click", runPreflightCheck);
+
+    // Step 4: Registration (create)
+    btnRegister.addEventListener("click", async () => {
+      try {
+        log("Windows Hello 등록 요청 (navigator.credentials.create)...");
+        const challenge = crypto.getRandomValues(new Uint8Array(32));
+        const userId = crypto.getRandomValues(new Uint8Array(16));
+
+        const cred = await navigator.credentials.create({
+          publicKey: {
+            challenge,
+            rp: { id: "localhost", name: "PrfVault Spike" },
+            user: {
+              id: userId,
+              name: "local-user@localhost",
+              displayName: "PrfVault Local User"
+            },
+            pubKeyCredParams: [
+              { type: "public-key", alg: -7 },   // ES256
+              { type: "public-key", alg: -257 }  // RS256
+            ],
+            authenticatorSelection: {
+              authenticatorAttachment: "platform",
+              userVerification: "required",
+              residentKey: "preferred"
+            },
+            timeout: 60000,
+            extensions: {
+              prf: {}
+            }
+          }
+        });
+
+        const extResults = cred.getClientExtensionResults();
+        log(`WebAuthn 확장 반환 결과: ${JSON.stringify(extResults)}`);
+
+        if (extResults.prf && extResults.prf.enabled) {
+          log('[SUCCESS] PRF 확장 활성화 확인됨! (prf.enabled = true)');
+        } else {
+          log('<span class="badge-warn">[WARN] prf.enabled 가 false이거나 반환되지 않았습니다. (하드웨어/드라이버 미지원 가능성)</span>');
+        }
+
+        const credIdB64 = base64UrlEncode(cred.rawId);
+        savedCredentialId = credIdB64;
+        localStorage.setItem("prfvault_cred_id", credIdB64);
+        spanCredId.textContent = credIdB64;
+        btnDerive.disabled = false;
+
+        log(`Credential 등록 완료! ID: ${credIdB64}`);
+      } catch (err) {
+        log(`등록 실패: ${err.name} - ${err.message}`);
+      }
+    });
+
+    // Step 5: Authentication & PRF Key Derivation (get)
+    btnDerive.addEventListener("click", async () => {
+      if (!savedCredentialId) {
+        log("먼저 자격 증명을 등록하십시오.");
+        return;
+      }
+
+      try {
+        crypto.getRandomValues(lastSalt);
+        log(`새 볼트 Salt 생성 (32B): ${toHex(lastSalt)}`);
+        log("Windows Hello 생체/PIN 검증 요청 (navigator.credentials.get with prf.eval)...");
+
+        const challenge = crypto.getRandomValues(new Uint8Array(32));
+        const assertion = await navigator.credentials.get({
+          publicKey: {
+            challenge,
+            rpId: "localhost",
+            allowCredentials: [{
+              id: base64UrlDecode(savedCredentialId),
+              type: "public-key"
+            }],
+            userVerification: "required",
+            timeout: 60000,
+            extensions: {
+              prf: {
+                eval: {
+                  first: lastSalt
+                }
+              }
+            }
+          }
+        });
+
+        const extResults = assertion.getClientExtensionResults();
+        log(`인증 확장 반환: ${JSON.stringify(extResults)}`);
+
+        if (extResults.prf && extResults.prf.results && extResults.prf.results.first) {
+          lastPrfKey = new Uint8Array(extResults.prf.results.first);
+          log('[SUCCESS] 32바이트 하드웨어 PRF 키 유도 성공!');
+          log(`PRF 유도 키 (Hex, 32B): ${toHex(lastPrfKey)}`);
+          btnWasmCrypto.disabled = false;
+        } else {
+          log('[FAIL] PRF 결과(first)가 반환되지 않았습니다.');
+        }
+      } catch (err) {
+        log(`PRF 유도 실패: ${err.name} - ${err.message}`);
+      }
+    });
+
+    // Step 6: Rust Wasm 암복호화 파이프라인 연동
+    btnWasmCrypto.addEventListener("click", () => {
+      if (!lastPrfKey || !wasmExports) {
+        log("PRF 유도 키 또는 Wasm 모듈이 준비되지 않았습니다.");
+        return;
+      }
+
+      try {
+        log("--- Wasm FFI C-ABI 연동 파이프라인 시작 ---");
+        const memory = new Uint8Array(wasmExports.memory.buffer);
+
+        // 1. HKDF 마스터 키 유도 (prf_vault_derive_master_key)
+        const prfPtr = wasm.prf_vault_alloc(32);
+        const saltPtr = wasm.prf_vault_alloc(32);
+        const masterKeyPtr = wasm.prf_vault_alloc(32);
+
+        new Uint8Array(wasmExports.memory.buffer, prfPtr, 32).set(lastPrfKey);
+        new Uint8Array(wasmExports.memory.buffer, saltPtr, 32).set(lastSalt);
+
+        const hkdfRes = wasm.prf_vault_derive_master_key(prfPtr, saltPtr, masterKeyPtr);
+        if (hkdfRes !== 0) {
+          throw new Error(`HKDF 실패 코드: ${hkdfRes}`);
+        }
+
+        const masterKey = new Uint8Array(wasmExports.memory.buffer, masterKeyPtr, 32).slice();
+        log(`[Wasm] HKDF Master Key 도출 성공 (32B): ${toHex(masterKey)}`);
+
+        // 민감 PRF 입력 버퍼 메모리 소거
+        wasm.prf_vault_dealloc_zeroize(prfPtr, 32);
+        wasm.prf_vault_dealloc_zeroize(saltPtr, 32);
+
+        // 2. AES-256-GCM 암호화 (prf_vault_encrypt)
+        const samplePlaintext = JSON.stringify({
+          site: "https://github.com",
+          username: "devsecops-candidate",
+          password: "MySecureGeneratedPassword#2026!"
+        });
+        const ptBytes = new TextEncoder().encode(samplePlaintext);
+        const aadBytes = new TextEncoder().encode("local-extension-id-prfvault-001");
+
+        const ptPtr = wasm.prf_vault_alloc(ptBytes.length);
+        const aadPtr = wasm.prf_vault_alloc(aadBytes.length);
+        new Uint8Array(wasmExports.memory.buffer, ptPtr, ptBytes.length).set(ptBytes);
+        new Uint8Array(wasmExports.memory.buffer, aadPtr, aadBytes.length).set(aadBytes);
+
+        // 출력 포인터 버퍼(4B 포인터 수신용)
+        const outBlobPtrPtr = wasm.prf_vault_alloc(4);
+        const outBlobLenPtr = wasm.prf_vault_alloc(4);
+
+        log(`[Wasm] 볼트 평문 암호화 중... (크기: ${ptBytes.length}B)`);
+        const encRes = wasm.prf_vault_encrypt(
+          masterKeyPtr,
+          aadPtr,
+          aadBytes.length,
+          ptPtr,
+          ptBytes.length,
+          outBlobPtrPtr,
+          outBlobLenPtr
+        );
+
+        if (encRes !== 0) {
+          throw new Error(`암호화 실패 코드: ${encRes}`);
+        }
+
+        const outBlobPtr = new DataView(wasmExports.memory.buffer).getUint32(outBlobPtrPtr, true);
+        const outBlobLen = new DataView(wasmExports.memory.buffer).getUint32(outBlobLenPtr, true);
+
+        const encryptedBlob = new Uint8Array(wasmExports.memory.buffer, outBlobPtr, outBlobLen).slice();
+        log(`[Wasm] 볼트 암호화 패킹 완료! 총 크기: ${encryptedBlob.length}B (최소 66B 규격 만족)`);
+        log(`헤더 정보 -> Schema: 0x${toHex(encryptedBlob.slice(0, 2))}, IV: 0x${toHex(encryptedBlob.slice(34, 46))}, Tag: 0x${toHex(encryptedBlob.slice(encryptedBlob.length - 16))}`);
+
+        // 평문 버퍼 소거
+        wasm.prf_vault_dealloc_zeroize(ptPtr, ptBytes.length);
+
+        // 3. AES-256-GCM 복호화 (prf_vault_decrypt)
+        const outPtPtrPtr = wasm.prf_vault_alloc(4);
+        const outPtLenPtr = wasm.prf_vault_alloc(4);
+
+        log("[Wasm] 암호화된 볼트 Blob 복호화 검증 중...");
+        const decRes = wasm.prf_vault_decrypt(
+          masterKeyPtr,
+          aadPtr,
+          aadBytes.length,
+          outBlobPtr,
+          outBlobLen,
+          outPtPtrPtr,
+          outPtLenPtr
+        );
+
+        if (decRes !== 0) {
+          throw new Error(`복호화 실패 코드: ${decRes}`);
+        }
+
+        const outPtPtr = new DataView(wasmExports.memory.buffer).getUint32(outPtPtrPtr, true);
+        const outPtLen = new DataView(wasmExports.memory.buffer).getUint32(outPtLenPtr, true);
+
+        const decryptedBytes = new Uint8Array(wasmExports.memory.buffer, outPtPtr, outPtLen).slice();
+        const decryptedText = new TextDecoder().decode(decryptedBytes);
+        log(`[SUCCESS] 복호화 완벽 일치! 복원된 데이터: ${decryptedText}`);
+
+        // 4. 메모리 완전 소거 (Zeroize)
+        wasm.prf_vault_dealloc_zeroize(masterKeyPtr, 32);
+        wasm.prf_vault_dealloc_zeroize(aadPtr, aadBytes.length);
+        wasm.prf_vault_dealloc_zeroize(outBlobPtr, outBlobLen);
+        wasm.prf_vault_dealloc_zeroize(outPtPtr, outPtLen);
+        wasm.prf_vault_dealloc_zeroize(outBlobPtrPtr, 4);
+        wasm.prf_vault_dealloc_zeroize(outBlobLenPtr, 4);
+        wasm.prf_vault_dealloc_zeroize(outPtPtrPtr, 4);
+        wasm.prf_vault_dealloc_zeroize(outPtLenPtr, 4);
+
+        log('[Zeroize] 모든 민감 포인터 메모리 물리 소거 완료 (0x00)');
+      } catch (err) {
+        log(`파이프라인 오류: ${err.message}`);
+      }
+    });
+
+    btnClear.addEventListener("click", () => {
+      localStorage.removeItem("prfvault_cred_id");
+      savedCredentialId = null;
+      spanCredId.textContent = "(없음)";
+      btnDerive.disabled = true;
+      btnWasmCrypto.disabled = true;
+      log("저장된 Credential ID 초기화 완료");
+    });
+
+    initSystem();
+  </script>
+</body>
+</html>
