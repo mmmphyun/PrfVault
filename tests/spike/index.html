@@ -335,14 +335,14 @@
         const memory = new Uint8Array(wasmExports.memory.buffer);
 
         // 1. HKDF 마스터 키 유도 (prf_vault_derive_master_key)
-        const prfPtr = wasm.prf_vault_alloc(32);
-        const saltPtr = wasm.prf_vault_alloc(32);
-        const masterKeyPtr = wasm.prf_vault_alloc(32);
+        const prfPtr = wasmExports.prf_vault_alloc(32);
+        const saltPtr = wasmExports.prf_vault_alloc(32);
+        const masterKeyPtr = wasmExports.prf_vault_alloc(32);
 
         new Uint8Array(wasmExports.memory.buffer, prfPtr, 32).set(lastPrfKey);
         new Uint8Array(wasmExports.memory.buffer, saltPtr, 32).set(lastSalt);
 
-        const hkdfRes = wasm.prf_vault_derive_master_key(prfPtr, saltPtr, masterKeyPtr);
+        const hkdfRes = wasmExports.prf_vault_derive_master_key(prfPtr, saltPtr, masterKeyPtr);
         if (hkdfRes !== 0) {
           throw new Error(`HKDF 실패 코드: ${hkdfRes}`);
         }
@@ -351,8 +351,8 @@
         log(`[Wasm] HKDF Master Key 도출 성공 (32B): ${toHex(masterKey)}`);
 
         // 민감 PRF 입력 버퍼 메모리 소거
-        wasm.prf_vault_dealloc_zeroize(prfPtr, 32);
-        wasm.prf_vault_dealloc_zeroize(saltPtr, 32);
+        wasmExports.prf_vault_dealloc_zeroize(prfPtr, 32);
+        wasmExports.prf_vault_dealloc_zeroize(saltPtr, 32);
 
         // 2. AES-256-GCM 암호화 (prf_vault_encrypt)
         const samplePlaintext = JSON.stringify({
@@ -363,17 +363,17 @@
         const ptBytes = new TextEncoder().encode(samplePlaintext);
         const aadBytes = new TextEncoder().encode("local-extension-id-prfvault-001");
 
-        const ptPtr = wasm.prf_vault_alloc(ptBytes.length);
-        const aadPtr = wasm.prf_vault_alloc(aadBytes.length);
+        const ptPtr = wasmExports.prf_vault_alloc(ptBytes.length);
+        const aadPtr = wasmExports.prf_vault_alloc(aadBytes.length);
         new Uint8Array(wasmExports.memory.buffer, ptPtr, ptBytes.length).set(ptBytes);
         new Uint8Array(wasmExports.memory.buffer, aadPtr, aadBytes.length).set(aadBytes);
 
         // 출력 포인터 버퍼(4B 포인터 수신용)
-        const outBlobPtrPtr = wasm.prf_vault_alloc(4);
-        const outBlobLenPtr = wasm.prf_vault_alloc(4);
+        const outBlobPtrPtr = wasmExports.prf_vault_alloc(4);
+        const outBlobLenPtr = wasmExports.prf_vault_alloc(4);
 
         log(`[Wasm] 볼트 평문 암호화 중... (크기: ${ptBytes.length}B)`);
-        const encRes = wasm.prf_vault_encrypt(
+        const encRes = wasmExports.prf_vault_encrypt(
           masterKeyPtr,
           aadPtr,
           aadBytes.length,
@@ -395,14 +395,14 @@
         log(`헤더 정보 -> Schema: 0x${toHex(encryptedBlob.slice(0, 2))}, IV: 0x${toHex(encryptedBlob.slice(34, 46))}, Tag: 0x${toHex(encryptedBlob.slice(encryptedBlob.length - 16))}`);
 
         // 평문 버퍼 소거
-        wasm.prf_vault_dealloc_zeroize(ptPtr, ptBytes.length);
+        wasmExports.prf_vault_dealloc_zeroize(ptPtr, ptBytes.length);
 
         // 3. AES-256-GCM 복호화 (prf_vault_decrypt)
-        const outPtPtrPtr = wasm.prf_vault_alloc(4);
-        const outPtLenPtr = wasm.prf_vault_alloc(4);
+        const outPtPtrPtr = wasmExports.prf_vault_alloc(4);
+        const outPtLenPtr = wasmExports.prf_vault_alloc(4);
 
         log("[Wasm] 암호화된 볼트 Blob 복호화 검증 중...");
-        const decRes = wasm.prf_vault_decrypt(
+        const decRes = wasmExports.prf_vault_decrypt(
           masterKeyPtr,
           aadPtr,
           aadBytes.length,
@@ -424,14 +424,14 @@
         log(`[SUCCESS] 복호화 완벽 일치! 복원된 데이터: ${decryptedText}`);
 
         // 4. 메모리 완전 소거 (Zeroize)
-        wasm.prf_vault_dealloc_zeroize(masterKeyPtr, 32);
-        wasm.prf_vault_dealloc_zeroize(aadPtr, aadBytes.length);
-        wasm.prf_vault_dealloc_zeroize(outBlobPtr, outBlobLen);
-        wasm.prf_vault_dealloc_zeroize(outPtPtr, outPtLen);
-        wasm.prf_vault_dealloc_zeroize(outBlobPtrPtr, 4);
-        wasm.prf_vault_dealloc_zeroize(outBlobLenPtr, 4);
-        wasm.prf_vault_dealloc_zeroize(outPtPtrPtr, 4);
-        wasm.prf_vault_dealloc_zeroize(outPtLenPtr, 4);
+        wasmExports.prf_vault_dealloc_zeroize(masterKeyPtr, 32);
+        wasmExports.prf_vault_dealloc_zeroize(aadPtr, aadBytes.length);
+        wasmExports.prf_vault_dealloc_zeroize(outBlobPtr, outBlobLen);
+        wasmExports.prf_vault_dealloc_zeroize(outPtPtr, outPtLen);
+        wasmExports.prf_vault_dealloc_zeroize(outBlobPtrPtr, 4);
+        wasmExports.prf_vault_dealloc_zeroize(outBlobLenPtr, 4);
+        wasmExports.prf_vault_dealloc_zeroize(outPtPtrPtr, 4);
+        wasmExports.prf_vault_dealloc_zeroize(outPtLenPtr, 4);
 
         log('[Zeroize] 모든 민감 포인터 메모리 물리 소거 완료 (0x00)');
       } catch (err) {
