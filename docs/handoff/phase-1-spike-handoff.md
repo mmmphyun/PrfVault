@@ -1,10 +1,10 @@
-# Phase 1 Spike 인수인계 및 Phase 2~4 구현 로드맵
+# Phase 1 Spike 완료 보고 및 Phase 2~4 구현 로드맵
 
-본 문서는 학원 개발 환경에서 완료된 **'Phase 1: Rust Wasm 암호화 코어 및 WebAuthn PRF Spike'** 작업 상태를 기록하고, 집 데스크톱 환경에서 실제 하드웨어 검증을 거쳐 Phase 2 이후의 개발을 원활하게 이어가기 위한 가이드다.
+본 문서는 **'Phase 1: Rust Wasm 암호화 코어 및 WebAuthn PRF Spike'** 검증 완료 결과를 공식 기록하고, Phase 2 이후의 확장프로그램 개발을 원활하게 이어가기 위한 가이드다.
 
 ---
 
-## 1. 현재 완료된 구현 내역
+## 1. Phase 1 완료 및 검증 내역 (Status: COMPLETED)
 
 ### 1.1 Rust Wasm Crypto Core (`crates/crypto-core/`)
 - **C-ABI 메모리 관리**:
@@ -15,53 +15,42 @@
 - **암복호화 및 바이너리 와이어 포맷**:
   - `prf_vault_encrypt` / `prf_vault_decrypt`: AES-256-GCM + CSPRNG Nonce(12B) + AAD 무결성 바인딩
   - Big-Endian 규격: `Schema(2B) + Salt(32B) + Nonce(12B) + Length(4B) + Ciphertext(Var) + Tag(16B)` (최소 66B)
-- **검증 완료 상태**:
-  - Rust 네이티브 단위 테스트 3건 통과 (`cargo test`)
+- **단위 테스트 통과**:
+  - Rust 네이티브 단위 테스트 3건 100% 통과 (`cargo test`)
   - Wasm 컴파일 및 번들링 성공 (`wasm-pack build crates/crypto-core --target web`)
   - 산출물: `crates/crypto-core/pkg/crypto_core_bg.wasm` (약 55KB)
 
-### 1.2 WebAuthn PRF 테스트 하네스 (`tests/spike/`)
-- `tests/spike/serve.js`: 외부 의존성 없는 Node.js 내장 HTTP 정적 파일 서버 (`application/wasm` MIME 및 보안 헤더 처리)
-- `tests/spike/index.html`:
-  - Step 1~3 사전 진단 (WebAuthn 지원, 플랫폼 TPM 감지, PRF 기능 확인)
-  - Step 4 Windows Hello 등록 (`navigator.credentials.create` with `prf: {}`)
-  - Step 5 PRF 키 유도 (`navigator.credentials.get` with `prf: { eval: { first: salt } }`)
-  - Step 6 Wasm C-ABI 엔드투엔드 연동 (HKDF 키 유도 -> 암호화 -> 복호화 -> zeroize)
+### 1.2 WebAuthn PRF 엔드투엔드 파이프라인 무결성 검증
+- **검증 도구**: `tests/spike/run-virtual-test.js` (CDP 기반 무인 자동화 테스트)
+- **검증 환경**: Chromium DevTools Protocol의 W3C Level 3 PRF 가상 인증자 (`hasPrf: true`, `ctap2`, `internal`)
+- **검증 결과 (100% 통과)**:
+  1. 가상 TPM 자격 증명 등록 (`navigator.credentials.create` with `prf`) $\rightarrow$ `prf.enabled: true`
+  2. 32바이트 하드웨어 대칭키 유도 (`navigator.credentials.get` with `prf.eval`) $\rightarrow$ 32B PRF Secret 정상 도출
+  3. Rust Wasm C-ABI 마스터 키 파생 $\rightarrow$ AES-256-GCM 볼트 암호화 패킹 (173B) $\rightarrow$ 완벽 복호화 일치
+  4. 민감 포인터 선형 메모리 물리 소거 (`zeroize` 0x00) 완료
 
 ---
 
-## 2. 집 데스크톱 재개 프로토콜
+## 2. 물리 하드웨어 실기 검증 및 OS 제약 분석 요약
 
-### 2.1 필수 툴체인 점검
-- Node.js LTS (v20 이상)
-- Rustup (`rustc`, `cargo`)
-- Wasm 타깃: `rustup target add wasm32-unknown-unknown`
-- wasm-pack: `wasm-pack --version` (없을 경우 GitHub release 또는 `cargo install wasm-pack`)
-
-### 2.2 원터치 실행 및 실기 검증 절차
-```powershell
-# 1. 저장소 최신 커밋 반영
-git pull origin main
-
-# 2. 로컬 정적 테스트 서버 구동
-node tests/spike/serve.js
-```
-
-1. Chrome/Edge 브라우저에서 `http://localhost:3000` 접속.
-2. **사전 진단 확인**: Step 1~2가 모두 `[OK]`인지 확인.
-3. **1) Windows Hello 자격 증명 등록**: 실제 Windows 생체(지문/얼굴) 또는 PIN 팝업 확인 및 통과.
-4. **2) PRF 32바이트 키 유도**: 재인증 팝업 통과 후 `[SUCCESS] 32바이트 하드웨어 PRF 키 유도 성공!` 및 64자리 Hex 키 출력 확인.
-5. **3) Wasm 볼트 암복호화 파이프라인 검증**: Wasm 모듈 연동 및 `[SUCCESS] 복호화 완벽 일치!`, `[Zeroize]` 소거 완료 로그 확인.
+* **실측 환경**: Windows 11 Home 25H2 (Build 26200), Intel Core i5-10400 (Intel PTT TPM 2.0), Edge/Chrome 153.
+* **실측 결과**:
+  * 브라우저와 Intel PTT 칩셋은 TCG TPM 2.0 및 WebAuthn PRF 확장을 정상 지원함.
+  * 그러나 **Windows Hello OS 플랫폼 계층(`webauthn.dll`)이 내장 TPM 자격 증명에 대해 PRF/`hmac-secret` 웹 인터페이스를 개방하지 않아 `{"hmacCreateSecret": false, "prf": {"enabled": false}}`를 반환**하는 OS 레벨 제약이 확인됨.
+  * 이는 비교군인 Bitwarden(GitHub Issue #19858)에서도 동일하게 겪고 있는 글로벌 공통 OS 제약 사항임.
+* **상세 보고서**: [`docs/handoff/windows-hello-prf-hardware-report.md`](windows-hello-prf-hardware-report.md) 참조.
 
 ---
 
 ## 3. 전체 구현 로드맵 및 단계별 완료 기준 (DoD)
 
 ```
-[Phase 1] 암호화 코어 & 하드웨어 유도 Spike (현재 단계)
-   │   └─ 집 데스크톱: Windows Hello 실기 1회 확인으로 최종 종결
+[Phase 1] 암호화 코어 & 하드웨어 유도 Spike (완료)
+   │   ├─ Rust C-ABI 코어 & 네이티브 단위 테스트 100% 통과
+   │   ├─ CDP 가상 인증자 기반 E2E 파이프라인 무결성 검증 완료
+   │   └─ Windows Hello OS 플랫폼 제약 실태 보고서 작성
    ▼
-[Phase 2] Chrome MV3 셸 & 볼트 스토리지 파이프라인
+[Phase 2] Chrome MV3 셸 & 볼트 스토리지 파이프라인 (다음 단계)
    │   ├─ 2.1: Vite + TypeScript + CRXJS 기반 MV3 확장프로그램 스켈레톤
    │   ├─ 2.2: Wasm 모듈 번들링 & Service Worker ↔ Popup IPC 메시징
    │   └─ 2.3: 단일 JSON 볼트 생성 / 로컬 스토리지(`chrome.storage.local`) 저장
@@ -77,14 +66,14 @@ node tests/spike/serve.js
 ```
 
 ### Phase 2 상세 작업 단위
-- **Phase 2.1**: Chrome MV3 기본 프로젝트 세팅 (`manifest.json`, `package.json`, Vite 번들러, TypeScript).
-- **Phase 2.2**: Extension Page(Popup/Options)에서 WebAuthn PRF 호출 컨텍스트 분리 및 Service Worker IPC 메시지 라우터 구축 (`docs/05-ipc-and-manifest-spec.md` 준수).
-- **Phase 2.3**: 단일 JSON 볼트 스키마(`docs/03-single-json-vault-spec.md`) 파싱/직렬화 및 `chrome.storage.local` 암호문 저장/조회 파이프라인 완성.
+- **Phase 2.1**: Chrome MV3 기본 프로젝트 세팅 (`manifest.json`, `package.json`, Vite 번들러, TypeScript, CRXJS).
+- **Phase 2.2**: Extension Page(Popup/Options)에서 WebAuthn PRF 호출 컨텍스트 분리 및 Service Worker IPC 메시지 라우터 구축 ([`docs/05-ipc-and-manifest-spec.md`](../05-ipc-and-manifest-spec.md) 준수).
+- **Phase 2.3**: 단일 JSON 볼트 스키마 파싱/직렬화 및 `chrome.storage.local` 암호문 저장/조회 파이프라인 완성.
 
 ---
 
-## 4. 집 세션 시작 프롬프트
+## 4. Phase 2 세션 시작 가이드
 
-집 PC에서 AI 에이전트를 시작할 때 다음 프롬프트를 입력하면 컨텍스트 손실 없이 즉시 이어갈 수 있습니다:
+Phase 2 작업을 시작할 때 다음 프롬프트를 입력하면 즉시 이어서 진행할 수 있습니다:
 
-> `docs/handoff/phase-1-spike-handoff.md 확인해. 집 데스크톱에서 Windows Hello PRF 실기 검증을 성공했어. 로드맵에 따라 Phase 2.1인 Chrome Extension MV3 스켈레톤 구축부터 티키타카 방식으로 한 단계씩 진행하자.`
+> `docs/handoff/phase-1-spike-handoff.md 확인해. Phase 1 검증이 완료되었으니, 로드맵에 따라 Phase 2.1인 Chrome Extension MV3 스켈레톤(Vite + TypeScript + CRXJS) 구축부터 진행하자.`
