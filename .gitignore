@@ -76,3 +76,5 @@ ehthumbs.db
 .vscode/
 *.swp
 *.swo
+HANDOVER.md
+.session-memory/
