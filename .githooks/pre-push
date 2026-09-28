@@ -1,0 +1,3 @@
+#!/bin/sh
+# session-sync 자동 생성 pre-push 훅
+session-sync hook exec "$@"
