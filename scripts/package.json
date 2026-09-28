@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --experimental-strip-types tests/scanner.test.ts",
+    "test": "node --experimental-strip-types tests/scanner.test.ts && node --experimental-strip-types tests/analyzer.test.ts",
+    "test:scanner": "node --experimental-strip-types tests/scanner.test.ts",
+    "test:analyzer": "node --experimental-strip-types tests/analyzer.test.ts",
+    "analyze": "node --experimental-strip-types benchmark/analyzer.ts",
     "scan": "node --experimental-strip-types benchmark/scanner.ts",
     "scan:quick": "node --experimental-strip-types benchmark/scanner.ts --limit=5"
   },
