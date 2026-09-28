@@ -14,12 +14,16 @@ import {
   type EpSaveEncryptedVaultRequest,
   type EpUnlockVaultRequest,
   type CsRequestCredentialsRequest,
+  type CsDetectSecurityModuleRequest,
+  type CsReportInjectionResultRequest,
   type CredentialCandidate,
   validateIpcPayload,
   EpGetVaultStatusSchema,
   EpSaveEncryptedVaultSchema,
   EpUnlockVaultSchema,
   CsRequestCredentialsSchema,
+  CsDetectSecurityModuleSchema,
+  CsReportInjectionResultSchema,
 } from '../ipc/messages';
 import { loadEncryptedVault, saveEncryptedVault } from '../storage/vault-store';
 import { fromHex } from '../auth/webauthn-prf';
@@ -112,6 +116,26 @@ router.register('CS_REQUEST_CREDENTIALS', async (req: CsRequestCredentialsReques
     domain: targetDomain,
     isVaultLocked,
     candidates,
+  };
+});
+
+// 5. CS_DETECT_SECURITY_MODULE 핸들러
+router.register('CS_DETECT_SECURITY_MODULE', async (req: CsDetectSecurityModuleRequest, ctx) => {
+  validateIpcPayload(CsDetectSecurityModuleSchema, req);
+  return {
+    acknowledged: true,
+    domain: ctx.verifiedDomain ?? req.payload.domain,
+    hasSecurityModule: req.payload.hasVirtualKeypad || req.payload.hasE2EKeyboardModule,
+  };
+});
+
+// 6. CS_REPORT_INJECTION_RESULT 핸들러
+router.register('CS_REPORT_INJECTION_RESULT', async (req: CsReportInjectionResultRequest, ctx) => {
+  validateIpcPayload(CsReportInjectionResultSchema, req);
+  return {
+    recorded: true,
+    domain: ctx.verifiedDomain ?? req.payload.domain,
+    status: req.payload.status,
   };
 });
 

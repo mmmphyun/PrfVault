@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { IpcRouter } from '../src/ipc/router';
 import {
   CsRequestCredentialsSchema,
+  CsDetectSecurityModuleSchema,
+  CsReportInjectionResultSchema,
   validateIpcPayload,
   type CsRequestCredentialsRequest,
 } from '../src/ipc/messages';
@@ -124,5 +126,33 @@ describe('MV3 IPC 라우터 및 발신지 검증 엔진 테스트', () => {
     expect(() => {
       validateIpcPayload(CsRequestCredentialsSchema, maliciousPayload);
     }).toThrow(/INVALID_REQUEST_PAYLOAD/);
+  });
+
+  it('CS_DETECT_SECURITY_MODULE 및 CS_REPORT_INJECTION_RESULT 스키마가 엄격하게 검증되어야 한다', () => {
+    const validSecurityPayload = {
+      id: validUuid,
+      action: 'CS_DETECT_SECURITY_MODULE',
+      payload: {
+        domain: 'example.com',
+        hasVirtualKeypad: true,
+        hasE2EKeyboardModule: false,
+        detectedSelectors: ['div.transkey'],
+      },
+      timestamp: Date.now(),
+    };
+    expect(() => validateIpcPayload(CsDetectSecurityModuleSchema, validSecurityPayload)).not.toThrow();
+
+    const validReportPayload = {
+      id: validUuid,
+      action: 'CS_REPORT_INJECTION_RESULT',
+      payload: {
+        domain: 'example.com',
+        accountId: 'acc-123',
+        status: 'SUCCESS' as const,
+        interKeystrokeMs: 15,
+      },
+      timestamp: Date.now(),
+    };
+    expect(() => validateIpcPayload(CsReportInjectionResultSchema, validReportPayload)).not.toThrow();
   });
 });
