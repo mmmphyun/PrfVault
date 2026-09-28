@@ -1,0 +1,17 @@
+{
+  "name": "prfvault-benchmark",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types tests/scanner.test.ts",
+    "scan": "node --experimental-strip-types benchmark/scanner.ts",
+    "scan:quick": "node --experimental-strip-types benchmark/scanner.ts --limit=5"
+  },
+  "dependencies": {
+    "playwright": "^1.63.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9"
+  }
+}
