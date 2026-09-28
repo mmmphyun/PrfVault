@@ -10,6 +10,7 @@ import {
   validateTargets,
   getTargetsByCategory,
   getTargetById,
+  getTargetsByMfaStatus,
 } from '../benchmark/targets.ts';
 import {
   SCANNER_SECURITY_SELECTORS,
@@ -19,15 +20,26 @@ import {
 } from '../benchmark/scanner.ts';
 
 async function runTests() {
-  console.log('--- [Test 1] 50대 타깃 전수 무결성 검증 ---');
+  console.log('--- [Test 1] 50대 타깃 전수 무결성 및 대조군 비율 검증 ---');
   const targetValidation = validateTargets();
   assert.equal(targetValidation.valid, true, '50개 타깃 검증 통과');
   assert.equal(targetValidation.total, 50, '정확히 50개 타깃 등록');
   assert.equal(targetValidation.duplicates.length, 0, '중복 ID 없음');
-  console.log('✓ Test 1 Passed: 50개 타깃 HTTPS 프로토콜 및 ID 고유성 100% 검증');
+  assert.equal(targetValidation.mfaEnforcedCount, 30, 'MFA 의무화 규제군 30개');
+  assert.equal(targetValidation.singleFactorCount, 20, '단일 패스워드 레거시군 20개');
+  console.log('✓ Test 1 Passed: 50개 타깃 무결성 및 대조군(MFA 30 : 단일팩터 20) 100% 검증');
 
-  console.log('--- [Test 2] 카테고리별 타깃 분류 검증 ---');
-  const categories = ['portal', 'banking', 'securities', 'public', 'ecommerce', 'fintech', 'telecom'] as const;
+  console.log('--- [Test 2] 8대 카테고리별 타깃 분류 검증 ---');
+  const categories = [
+    'portal',
+    'community',
+    'banking',
+    'securities',
+    'public',
+    'ecommerce',
+    'fintech',
+    'telecom',
+  ] as const;
   let categorySum = 0;
   for (const cat of categories) {
     const list = getTargetsByCategory(cat);
@@ -35,7 +47,9 @@ async function runTests() {
     categorySum += list.length;
   }
   assert.equal(categorySum, 50, '전체 카테고리 합산 50개 일치');
-  console.log('✓ Test 2 Passed: 7대 카테고리 타깃 분류 무결성');
+  const communities = getTargetsByCategory('community');
+  assert.equal(communities.length, 5, '커뮤니티 카테고리 타깃 5개 정확히 일치');
+  console.log('✓ Test 2 Passed: 8대 카테고리(커뮤니티 5개 신설 포함) 분류 무결성');
 
   console.log('--- [Test 3] 비-HTTPS URL 진입 차단 정책 검증 ---');
   const invalidTarget = {
@@ -44,10 +58,13 @@ async function runTests() {
     domain: 'insecure.test',
     category: 'portal' as const,
     loginUrl: 'http://insecure.test/login',
+    hasMfaEnforced: false,
   };
   const blockedResult = await scanTargetSite(invalidTarget);
   assert.ok(blockedResult.error?.includes('HTTPS'), '비-HTTPS 접근 시 에러 반환');
   assert.equal(blockedResult.hasLoginForm, false);
+  assert.equal(blockedResult.category, 'portal');
+  assert.equal(blockedResult.hasMfaEnforced, false);
   console.log('✓ Test 3 Passed: 비-HTTPS 예외 거부 및 에러 격리 정책 준수');
 
   console.log('--- [Test 4] 보안 모듈 셀렉터 정의 무결성 검증 ---');
@@ -64,6 +81,8 @@ async function runTests() {
     {
       domain: 'test.com',
       url: 'https://test.com/login',
+      category: 'community',
+      hasMfaEnforced: false,
       hasLoginForm: true,
       securityModules: ['TouchEn', 'VirtualKeypad'],
       maxPasswordLength: 16,
@@ -78,9 +97,11 @@ async function runTests() {
   const loaded = JSON.parse(fs.readFileSync(testOutputPath, 'utf-8'));
   assert.equal(loaded.length, 1);
   assert.equal(loaded[0].domain, 'test.com');
+  assert.equal(loaded[0].category, 'community');
+  assert.equal(loaded[0].hasMfaEnforced, false);
   assert.equal(loaded[0].blockedByVirtualKeypad, true);
   fs.unlinkSync(testOutputPath); // 정리
-  console.log('✓ Test 5 Passed: 스캔 결과 파일 저장 및 무결성');
+  console.log('✓ Test 5 Passed: 스캔 결과 파일 저장 및 메타데이터 무결성');
 
   console.log('\n========================================');
   console.log('  ALL 5 SCANNER PIPELINE TESTS PASSED');

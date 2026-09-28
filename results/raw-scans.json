@@ -1,16 +1,18 @@
 [
   {
-    "domain": "kiwoom.com",
-    "url": "https://bbn.kiwoom.com/login",
-    "finalUrl": "https://www.kiwoom.com/h/simpleAuthLoginView",
-    "pageTitle": "키움증권",
-    "hasLoginForm": false,
+    "domain": "bobaedream.co.kr",
+    "url": "https://www.bobaedream.co.kr/member/login.php",
+    "category": "community",
+    "hasMfaEnforced": false,
+    "finalUrl": "https://security.bobaedream.co.kr/member/slogin.php?page=",
+    "pageTitle": "보배드림 로그인",
+    "hasLoginForm": true,
     "securityModules": [],
     "blockedByVirtualKeypad": false,
     "hasE2EKeyboardModule": false,
     "isRegistration": false,
     "inputConstraints": {},
     "detectedSelectors": [],
-    "timestamp": "2026-09-28T05:50:48.267Z"
+    "timestamp": "2026-09-28T06:00:14.339Z"
   }
 ]
