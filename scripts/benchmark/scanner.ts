@@ -40,6 +40,8 @@ export interface InputConstraints {
 export interface ScanResult {
   domain: string;
   url: string;
+  category: SiteCategory;
+  hasMfaEnforced: boolean;
   finalUrl?: string;
   pageTitle?: string;
   hasLoginForm: boolean;
@@ -141,6 +143,8 @@ export async function scanTargetSite(
     return {
       domain: target.domain,
       url: target.loginUrl,
+      category: target.category,
+      hasMfaEnforced: target.hasMfaEnforced,
       hasLoginForm: false,
       securityModules: [],
       blockedByVirtualKeypad: false,
@@ -364,6 +368,8 @@ export async function scanTargetSite(
     return {
       domain: target.domain,
       url: target.loginUrl,
+      category: target.category,
+      hasMfaEnforced: target.hasMfaEnforced,
       finalUrl,
       pageTitle,
       hasLoginForm: combinedHasLoginForm,
@@ -389,6 +395,8 @@ export async function scanTargetSite(
     return {
       domain: target.domain,
       url: target.loginUrl,
+      category: target.category,
+      hasMfaEnforced: target.hasMfaEnforced,
       hasLoginForm: false,
       securityModules: [],
       blockedByVirtualKeypad: false,
