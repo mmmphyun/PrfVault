@@ -17,6 +17,8 @@ import {
   type CsDetectSecurityModuleRequest,
   type CsReportInjectionResultRequest,
   type CredentialCandidate,
+  type EpNativePingRequest,
+  type EpNativePrfDeriveRequest,
   validateIpcPayload,
   EpGetVaultStatusSchema,
   EpSaveEncryptedVaultSchema,
@@ -24,9 +26,12 @@ import {
   CsRequestCredentialsSchema,
   CsDetectSecurityModuleSchema,
   CsReportInjectionResultSchema,
+  EpNativePingSchema,
+  EpNativePrfDeriveSchema,
 } from '../ipc/messages';
 import { loadEncryptedVault, saveEncryptedVault } from '../storage/vault-store';
 import { fromHex } from '../auth/webauthn-prf';
+import { pingNativeHost, derivePrfViaHost } from './native-ipc';
 
 // 세션 캐시 (SW 수명 주기 내에서만 유지되며 브라우저 유휴 시 자동 소멸)
 interface CachedSession {
@@ -137,6 +142,25 @@ router.register('CS_REPORT_INJECTION_RESULT', async (req: CsReportInjectionResul
     domain: ctx.verifiedDomain ?? req.payload.domain,
     status: req.payload.status,
   };
+});
+
+// 7. EP_NATIVE_PING 핸들러 (네이티브 호스트 Liveness 검증)
+router.register('EP_NATIVE_PING', async (req: EpNativePingRequest) => {
+  validateIpcPayload(EpNativePingSchema, req);
+  const result = await pingNativeHost(req.payload.hostName, req.payload.timeoutMs);
+  return result;
+});
+
+// 8. EP_NATIVE_PRF_DERIVE 핸들러 (Windows Hello / 네이티브 호스트 PRF 연동)
+router.register('EP_NATIVE_PRF_DERIVE', async (req: EpNativePrfDeriveRequest) => {
+  validateIpcPayload(EpNativePrfDeriveSchema, req);
+  const result = await derivePrfViaHost(
+    req.payload.domain,
+    req.payload.challenge,
+    req.payload.hostName,
+    req.payload.timeoutMs
+  );
+  return result;
 });
 
 // 크롬 런타임 메시지 리스너 바인딩

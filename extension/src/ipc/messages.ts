@@ -18,6 +18,7 @@ export type IpcErrorCode =
   | 'SECURITY_MODULE_BLOCKED'
   | 'DOM_INPUT_REJECTED'
   | 'STORAGE_ERROR'
+  | 'NATIVE_HOST_ERROR'
   | 'INVALID_REQUEST_PAYLOAD';
 
 export interface IpcRequest<TAction extends string = string, TPayload = unknown> {
@@ -136,6 +137,32 @@ export const EpSaveEncryptedVaultSchema = z.object({
   timestamp: z.number().int().positive(),
 });
 export type EpSaveEncryptedVaultRequest = z.infer<typeof EpSaveEncryptedVaultSchema>;
+
+// 7. EP_NATIVE_PING
+export const EpNativePingSchema = z.object({
+  id: z.string().uuid(),
+  action: z.literal('EP_NATIVE_PING'),
+  payload: z.object({
+    hostName: z.string().max(128).optional(),
+    timeoutMs: z.number().int().positive().max(30000).optional(),
+  }).strict(),
+  timestamp: z.number().int().positive(),
+});
+export type EpNativePingRequest = z.infer<typeof EpNativePingSchema>;
+
+// 8. EP_NATIVE_PRF_DERIVE
+export const EpNativePrfDeriveSchema = z.object({
+  id: z.string().uuid(),
+  action: z.literal('EP_NATIVE_PRF_DERIVE'),
+  payload: z.object({
+    domain: z.string().max(256),
+    challenge: z.string().max(512),
+    hostName: z.string().max(128).optional(),
+    timeoutMs: z.number().int().positive().max(30000).optional(),
+  }).strict(),
+  timestamp: z.number().int().positive(),
+});
+export type EpNativePrfDeriveRequest = z.infer<typeof EpNativePrfDeriveSchema>;
 
 /**
  * 런타임 페이로드를 지정된 Zod 스키마로 검증하고 파싱합니다.
