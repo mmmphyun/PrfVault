@@ -23,7 +23,8 @@
     "storage",
     "alarms",
     "activeTab",
-    "scripting"
+    "scripting",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "https://*/*"
