@@ -22,6 +22,7 @@ pnpm-debug.log*
 *.crx
 .crx/
 key.pem
+crates/native-host/com.prfvault.native_host.json
 
 # Secrets & Environment Variables
 .env

@@ -1,0 +1,9 @@
+{
+  "name": "com.prfvault.native_host",
+  "description": "PrfVault Chrome Native Messaging Host",
+  "path": "<ABSOLUTE_PATH_TO_NATIVE_HOST_BINARY>",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://<CHROME_EXTENSION_ID>/"
+  ]
+}
