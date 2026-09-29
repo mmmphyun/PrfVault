@@ -2,4 +2,5 @@
 resolver = "2"
 members = [
     "crates/crypto-core",
+    "crates/native-host",
 ]
