@@ -36,6 +36,7 @@
     .badge-ok { background: #064e3b; color: #34d399; }
     .badge-error { background: #7f1d1d; color: #f87171; }
     .badge-pending { background: #854d0e; color: #fde047; }
+    .badge-provider { background: #1e3a8a; color: #93c5fd; }
     .card {
       background: #1e293b;
       border: 1px solid #334155;
@@ -125,6 +126,20 @@
     <span>PrfVault</span>
     <span id="vault-badge" class="badge badge-locked">Locked</span>
   </h1>
+
+  <!-- 0. 볼트 잠금 해제 (Hybrid PRF Unlock) 메인 카드 -->
+  <div class="card" id="card-vault-unlock">
+    <div class="card-title">
+      <span>Vault Unlock (하이브리드 잠금 해제)</span>
+      <span id="unlock-provider-badge" class="badge badge-provider" style="display: none;">Provider</span>
+    </div>
+    <div class="form-group">
+      <label for="input-vault-domain">인증 도메인 (Relying Party ID)</label>
+      <input id="input-vault-domain" type="text" value="example.com" placeholder="example.com" />
+    </div>
+    <button id="btn-unlock-vault" class="btn-block" style="margin-bottom: 8px;">볼트 잠금 해제</button>
+    <div id="unlock-result-box" class="log-box">잠금 상태입니다. '볼트 잠금 해제'를 클릭하십시오.</div>
+  </div>
 
   <!-- 1. 네이티브 호스트 Liveness 상태 카드 -->
   <div class="card">
