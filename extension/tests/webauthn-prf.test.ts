@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   base64UrlEncode,
   base64UrlDecode,
@@ -6,7 +8,9 @@ import {
   fromHex,
   registerPrfCredential,
   derivePrfSecret,
+  deriveMasterKeyWithFallback,
 } from '../src/auth/webauthn-prf';
+import { createCryptoCore, CryptoCore } from '../src/crypto/wasm-core';
 
 describe('WebAuthn PRF 클라이언트 및 유틸리티 단위 테스트', () => {
   it('Base64URL 인코딩 및 디코딩이 완벽하게 일치해야 한다', () => {
@@ -99,5 +103,67 @@ describe('WebAuthn PRF 클라이언트 및 유틸리티 단위 테스트', () =>
         /PRF 대칭키가 반환되지 않았습니다/
       );
     });
+
+    describe('deriveMasterKeyWithFallback 하이브리드 폴백 테스트', () => {
+      let core: CryptoCore;
+
+      beforeEach(async () => {
+        const wasmPath = path.resolve(__dirname, '../src/crypto/wasm/crypto_core_bg.wasm');
+        const wasmBuffer = fs.readFileSync(wasmPath);
+        core = await createCryptoCore(wasmBuffer);
+      });
+
+      it('WebAuthn 성공 시 provider가 webauthn이고 32바이트 마스터키를 도출해야 한다', async () => {
+        const mockPrfSecret = new Uint8Array(32).fill(0x33);
+        mockGet.mockResolvedValue({
+          getClientExtensionResults: () => ({
+            prf: {
+              results: {
+                first: mockPrfSecret.buffer,
+              },
+            },
+          }),
+        });
+
+        const salt = new Uint8Array(32).fill(0x44);
+        const result = await deriveMasterKeyWithFallback('example.com', salt, 'cred123', core);
+
+        expect(result.provider).toBe('webauthn');
+        expect(result.masterKey.length).toBe(32);
+        const expectedMasterKey = core.deriveMasterKey(mockPrfSecret, salt);
+        expect(result.masterKey).toEqual(expectedMasterKey);
+      });
+
+      it('WebAuthn 실패 시 Native Host로 폴백하여 provider가 native_host이고 마스터키를 도출해야 한다', async () => {
+        // WebAuthn 실패 시뮬레이션
+        mockGet.mockRejectedValue(new Error('ExtensionNotSupported'));
+
+        const nativeHexKey = '99'.repeat(32);
+        (globalThis as any).chrome = {
+          runtime: {
+            sendNativeMessage: vi.fn((_host: string, _msg: unknown, cb: (res: unknown) => void) => {
+              cb({
+                status: 'OK',
+                data: {
+                  domain: 'example.com',
+                  challenge: 'toHexSalt',
+                  derived: true,
+                  key: nativeHexKey,
+                },
+              });
+            }),
+          },
+        };
+
+        const salt = new Uint8Array(32).fill(0x55);
+        const result = await deriveMasterKeyWithFallback('example.com', salt, 'cred123', core);
+
+        expect(result.provider).toBe('native_host');
+        expect(result.masterKey.length).toBe(32);
+        const expectedMasterKey = core.deriveMasterKey(fromHex(nativeHexKey), salt);
+        expect(result.masterKey).toEqual(expectedMasterKey);
+      });
+    });
   });
 });
+
