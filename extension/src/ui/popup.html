@@ -9,13 +9,13 @@
       color-scheme: dark;
     }
     body {
-      width: 360px;
+      width: 380px;
       margin: 0;
       padding: 16px;
       background-color: #0f172a;
       color: #f8fafc;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       box-sizing: border-box;
     }
     h1 {
@@ -26,41 +26,135 @@
       align-items: center;
       justify-content: space-between;
     }
-    .status-card {
+    .badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .badge-locked { background: #334155; color: #94a3b8; }
+    .badge-ok { background: #064e3b; color: #34d399; }
+    .badge-error { background: #7f1d1d; color: #f87171; }
+    .badge-pending { background: #854d0e; color: #fde047; }
+    .card {
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 6px;
       padding: 12px;
       margin-bottom: 12px;
     }
-    button {
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .form-group {
+      margin-bottom: 8px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-bottom: 4px;
+    }
+    input {
       width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      color: #f8fafc;
+      padding: 6px 8px;
+      font-size: 12px;
+      box-sizing: border-box;
+      font-family: monospace;
+    }
+    input:focus {
+      outline: none;
+      border-color: #38bdf8;
+    }
+    button {
       background: #0284c7;
       color: #ffffff;
       border: none;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 8px 12px;
+      border-radius: 4px;
       font-weight: 600;
+      font-size: 12px;
       cursor: pointer;
+      transition: background 0.15s;
+    }
+    button.btn-block {
+      width: 100%;
+    }
+    button.btn-secondary {
+      background: #334155;
+      color: #cbd5e1;
+    }
+    button.btn-secondary:hover:not(:disabled) {
+      background: #475569;
     }
     button:disabled {
       background: #475569;
+      color: #94a3b8;
       cursor: not-allowed;
     }
     button:hover:not(:disabled) {
       background: #0369a1;
+    }
+    .log-box {
+      font-family: monospace;
+      font-size: 11px;
+      background: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: 4px;
+      padding: 8px;
+      max-height: 100px;
+      overflow-y: auto;
+      word-break: break-all;
+      color: #cbd5e1;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
   <h1>
     <span>PrfVault</span>
-    <span id="vault-badge" style="font-size: 12px; color: #94a3b8;">Locked</span>
+    <span id="vault-badge" class="badge badge-locked">Locked</span>
   </h1>
-  <div class="status-card" id="status-box">
-    시스템 준비 중...
+
+  <!-- 1. 네이티브 호스트 Liveness 상태 카드 -->
+  <div class="card">
+    <div class="card-title">
+      <span>Native Host (Windows Hello / TPM)</span>
+      <span id="native-host-badge" class="badge badge-pending">확인 중...</span>
+    </div>
+    <div id="native-host-info" style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">
+      호스트: com.prfvault.native_host
+    </div>
+    <button id="btn-native-ping" class="btn-secondary" style="width: 100%;">연결 상태 확인 (Ping)</button>
   </div>
-  <button id="btn-action" disabled>잠금 해제</button>
+
+  <!-- 2. 하드웨어 PRF 도출 수동 테스트 카드 -->
+  <div class="card">
+    <div class="card-title">
+      <span>Hardware PRF Key Derivation</span>
+    </div>
+    <div class="form-group">
+      <label for="input-prf-domain">바인딩 도메인 (Relying Party)</label>
+      <input id="input-prf-domain" type="text" value="example.com" placeholder="example.com" />
+    </div>
+    <div class="form-group">
+      <label for="input-prf-challenge">32바이트 챌린지 (Hex)</label>
+      <input id="input-prf-challenge" type="text" value="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" />
+    </div>
+    <button id="btn-prf-derive" class="btn-block" style="margin-bottom: 8px;">하드웨어 PRF 키 도출</button>
+    <div id="prf-result-box" class="log-box">대기 중...</div>
+  </div>
+
   <script type="module" src="./popup.ts"></script>
 </body>
 </html>
