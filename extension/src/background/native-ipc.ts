@@ -163,10 +163,10 @@ export async function derivePrfViaHost(
   challenge: string,
   hostName: string = DEFAULT_NATIVE_HOST_NAME,
   timeoutMs: number = 10000
-): Promise<{ domain: string; challenge: string; derived: boolean }> {
+): Promise<{ domain: string; challenge: string; derived: boolean; key?: string }> {
   return sendNativeMessage<
     NativePrfDeriveRequest,
-    { domain: string; challenge: string; derived: boolean }
+    { domain: string; challenge: string; derived: boolean; key?: string }
   >(
     {
       type: 'PRF_DERIVE',

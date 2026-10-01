@@ -199,3 +199,18 @@ export async function createCryptoCore(
 
   return new CryptoCore(exports);
 }
+
+let cachedCryptoCore: CryptoCore | null = null;
+
+export async function getOrCreateCryptoCore(customCore?: CryptoCore): Promise<CryptoCore> {
+  if (customCore) return customCore;
+  if (!cachedCryptoCore) {
+    cachedCryptoCore = await createCryptoCore();
+  }
+  return cachedCryptoCore;
+}
+
+export function setGlobalCryptoCore(core: CryptoCore | null): void {
+  cachedCryptoCore = core;
+}
+
