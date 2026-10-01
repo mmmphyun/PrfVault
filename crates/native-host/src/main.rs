@@ -1,4 +1,5 @@
 mod protocol;
+pub mod windows_hello;
 
 use std::io::{self, BufReader, BufWriter};
 
