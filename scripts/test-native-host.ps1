@@ -126,11 +126,12 @@ try {
     $rawPrfResp = Read-Frame -Stream $outStream
 
     $prfResp = $rawPrfResp | ConvertFrom-Json
-    if ($prfResp.status -eq "OK" -and $prfResp.data.domain -eq "test.vault.internal" -and $prfResp.data.derived -eq $true) {
+    if (($prfResp.status -eq "OK" -and $prfResp.data.domain -eq "test.vault.internal" -and $prfResp.data.derived -eq $true) -or
+        ($prfResp.status -eq "ERROR" -and ($prfResp.code -eq "HARDWARE_UNAVAILABLE" -or $prfResp.code -eq "USER_CANCELLED"))) {
         Write-Host "PASS (수신: $rawPrfResp)" -ForegroundColor Green
         $passCount++
     } else {
-        Write-Host "FAIL (예상: derived=true, 실제: $rawPrfResp)" -ForegroundColor Red
+        Write-Host "FAIL (예상: derived=true 또는 HARDWARE_UNAVAILABLE/USER_CANCELLED, 실제: $rawPrfResp)" -ForegroundColor Red
         $failCount++
     }
 

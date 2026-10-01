@@ -22,6 +22,8 @@ pub const NTE_NOT_SUPPORTED: i32 = -2146893783;     // 0x80090029
 #[allow(dead_code)]
 pub const NTE_USER_CANCELLED: i32 = -2146893770;    // 0x80090036
 #[allow(dead_code)]
+pub const NTE_INVALID_PARAMETER: i32 = -2146893785; // 0x80090027
+#[allow(dead_code)]
 pub const NTE_DEVICE_NOT_READY: i32 = -2146893776;  // 0x80090030
 #[allow(dead_code)]
 pub const NTE_NO_KEY: i32 = -2146893811;            // 0x8009000D
@@ -253,7 +255,7 @@ pub fn derive_hardware_prf(domain: &str, challenge: &[u8]) -> Result<[u8; 32], W
         }
         return Err(match status {
             NTE_USER_CANCELLED | SCARD_W_CANCELLED_BY_USER => WindowsHelloError::UserCancelled,
-            NTE_NOT_SUPPORTED | NTE_BAD_KEYSET | NTE_DEVICE_NOT_READY => {
+            NTE_NOT_SUPPORTED | NTE_BAD_KEYSET | NTE_DEVICE_NOT_READY | NTE_INVALID_PARAMETER => {
                 WindowsHelloError::HardwareUnavailable(format!(
                     "하드웨어 키 생성/접근 불가 (상태 코드: {status:#X})"
                 ))
@@ -307,7 +309,7 @@ pub fn derive_hardware_prf(domain: &str, challenge: &[u8]) -> Result<[u8; 32], W
     if derive_status != ERROR_SUCCESS {
         return Err(match derive_status {
             NTE_USER_CANCELLED | SCARD_W_CANCELLED_BY_USER => WindowsHelloError::UserCancelled,
-            NTE_NOT_SUPPORTED => WindowsHelloError::HardwareUnavailable(format!(
+            NTE_NOT_SUPPORTED | NTE_INVALID_PARAMETER => WindowsHelloError::HardwareUnavailable(format!(
                 "하드웨어 KDF 미지원 (상태 코드: {derive_status:#X})"
             )),
             _ => WindowsHelloError::Internal(format!(

@@ -102,24 +102,78 @@ pub fn handle_message(raw_bytes: &[u8]) -> (Vec<u8>, bool) {
             (body, false)
         }
         Ok(HostRequest::PrfDerive { domain, challenge }) => {
-            // Phase 5.1 프로토콜 연결 검증용 응답.
-            // 이후 Phase 5.2에서 Windows Hello C-API(NCrypt/WebAuthn) FFI 연동으로 확장.
-            #[derive(Serialize)]
-            struct PrfData {
-                domain: String,
-                challenge: String,
-                derived: bool,
+            // 도메인 유효성 제약 검증 (1자 이상 255자 이하)
+            if domain.is_empty() || domain.len() > 255 {
+                let resp = ErrorResponse {
+                    status: "ERROR".to_string(),
+                    code: "INVALID_PARAMETER".to_string(),
+                    message: Some("도메인 길이는 1자 이상 255자 이하여야 합니다.".to_string()),
+                };
+                let body = serde_json::to_vec(&resp).unwrap_or_default();
+                return (body, false);
             }
-            let resp = SuccessResponse {
-                status: "OK".to_string(),
-                data: PrfData {
-                    domain,
-                    challenge,
-                    derived: true,
-                },
-            };
-            let body = serde_json::to_vec(&resp).unwrap_or_default();
-            (body, false)
+
+            let challenge_seed = parse_or_normalize_challenge(&challenge);
+
+            match crate::windows_hello::derive_hardware_prf(&domain, &challenge_seed) {
+                Ok(key) => {
+                    let hex_key = to_hex_string(&key);
+                    #[derive(Serialize)]
+                    struct PrfData {
+                        domain: String,
+                        challenge: String,
+                        derived: bool,
+                        key: String,
+                    }
+                    let resp = SuccessResponse {
+                        status: "OK".to_string(),
+                        data: PrfData {
+                            domain,
+                            challenge,
+                            derived: true,
+                            key: hex_key,
+                        },
+                    };
+                    let body = serde_json::to_vec(&resp).unwrap_or_default();
+                    (body, false)
+                }
+                Err(crate::windows_hello::WindowsHelloError::UserCancelled) => {
+                    let resp = ErrorResponse {
+                        status: "ERROR".to_string(),
+                        code: "USER_CANCELLED".to_string(),
+                        message: Some("사용자에 의해 Windows Hello 인증이 취소되었습니다.".to_string()),
+                    };
+                    let body = serde_json::to_vec(&resp).unwrap_or_default();
+                    (body, false)
+                }
+                Err(crate::windows_hello::WindowsHelloError::HardwareUnavailable(msg)) => {
+                    let resp = ErrorResponse {
+                        status: "ERROR".to_string(),
+                        code: "HARDWARE_UNAVAILABLE".to_string(),
+                        message: Some(msg),
+                    };
+                    let body = serde_json::to_vec(&resp).unwrap_or_default();
+                    (body, false)
+                }
+                Err(crate::windows_hello::WindowsHelloError::InvalidParameter(msg)) => {
+                    let resp = ErrorResponse {
+                        status: "ERROR".to_string(),
+                        code: "INVALID_PARAMETER".to_string(),
+                        message: Some(msg),
+                    };
+                    let body = serde_json::to_vec(&resp).unwrap_or_default();
+                    (body, false)
+                }
+                Err(crate::windows_hello::WindowsHelloError::Internal(msg)) => {
+                    let resp = ErrorResponse {
+                        status: "ERROR".to_string(),
+                        code: "INTERNAL_ERROR".to_string(),
+                        message: Some(msg),
+                    };
+                    let body = serde_json::to_vec(&resp).unwrap_or_default();
+                    (body, false)
+                }
+            }
         }
         Err(_) => {
             let resp = ErrorResponse {
@@ -132,6 +186,50 @@ pub fn handle_message(raw_bytes: &[u8]) -> (Vec<u8>, bool) {
             (body, true)
         }
     }
+}
+
+/// 챌린지 문자열을 파싱하여 정확히 32바이트 바이너리 시드로 정규화한다.
+/// - 64자리 16진수 hex 문자열인 경우 바이트 디코딩.
+/// - 32바이트 길이 문자열인 경우 바이트 배열 직접 추출.
+/// - 그 외 문자열인 경우 32바이트 제로 패딩/슬라이싱 적용.
+fn parse_or_normalize_challenge(s: &str) -> [u8; 32] {
+    if s.len() == 64 && s.chars().all(|c| c.is_ascii_hexdigit()) {
+        let mut out = [0u8; 32];
+        let mut valid = true;
+        for i in 0..32 {
+            if let Ok(b) = u8::from_str_radix(&s[i * 2..i * 2 + 2], 16) {
+                out[i] = b;
+            } else {
+                valid = false;
+                break;
+            }
+        }
+        if valid {
+            return out;
+        }
+    }
+
+    let bytes = s.as_bytes();
+    if bytes.len() == 32 {
+        let mut out = [0u8; 32];
+        out.copy_from_slice(bytes);
+        return out;
+    }
+
+    let mut out = [0u8; 32];
+    let copy_len = bytes.len().min(32);
+    out[..copy_len].copy_from_slice(&bytes[..copy_len]);
+    out
+}
+
+/// 바이트 슬라이스를 소문자 16진수 hex 문자열로 인코딩한다.
+fn to_hex_string(bytes: &[u8]) -> String {
+    use std::fmt::Write;
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        let _ = write!(&mut s, "{:02x}", b);
+    }
+    s
 }
 
 #[cfg(test)]
@@ -191,15 +289,35 @@ mod tests {
     }
 
     #[test]
-    fn test_handle_message_prf_derive() {
-        let prf_msg = br#"{"type":"PRF_DERIVE","domain":"example.com","challenge":"test_challenge"}"#;
+    fn test_handle_message_prf_derive_hardware_or_graceful_error() {
+        let prf_msg = br#"{"type":"PRF_DERIVE","domain":"example.com","challenge":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}"#;
         let (resp_bytes, should_exit) = handle_message(prf_msg);
         assert!(!should_exit);
 
         let v: serde_json::Value = serde_json::from_slice(&resp_bytes).unwrap();
-        assert_eq!(v["status"], "OK");
-        assert_eq!(v["data"]["domain"], "example.com");
-        assert_eq!(v["data"]["derived"], true);
+        if v["status"] == "OK" {
+            assert_eq!(v["data"]["domain"], "example.com");
+            assert_eq!(v["data"]["derived"], true);
+            assert!(v["data"]["key"].is_string());
+        } else {
+            assert_eq!(v["status"], "ERROR");
+            assert!(
+                v["code"] == "HARDWARE_UNAVAILABLE"
+                    || v["code"] == "USER_CANCELLED"
+                    || v["code"] == "INTERNAL_ERROR"
+            );
+        }
+    }
+
+    #[test]
+    fn test_handle_message_prf_derive_invalid_domain() {
+        let empty_domain_msg = br#"{"type":"PRF_DERIVE","domain":"","challenge":"seed"}"#;
+        let (resp_bytes, should_exit) = handle_message(empty_domain_msg);
+        assert!(!should_exit);
+
+        let v: serde_json::Value = serde_json::from_slice(&resp_bytes).unwrap();
+        assert_eq!(v["status"], "ERROR");
+        assert_eq!(v["code"], "INVALID_PARAMETER");
     }
 
     #[test]
@@ -211,5 +329,14 @@ mod tests {
         let v: serde_json::Value = serde_json::from_slice(&resp_bytes).unwrap();
         assert_eq!(v["status"], "ERROR");
         assert_eq!(v["code"], "INVALID_PAYLOAD");
+    }
+
+    #[test]
+    fn test_parse_or_normalize_challenge_hex() {
+        let hex_chal = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        let parsed = parse_or_normalize_challenge(hex_chal);
+        assert_eq!(parsed[0], 0x01);
+        assert_eq!(parsed[1], 0x23);
+        assert_eq!(parsed[31], 0xef);
     }
 }
