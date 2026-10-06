@@ -10,6 +10,8 @@ paths = [
     '''docs/''',
     '''tests/fixtures/''',
     '''tests/vectors/''',
+    '''extension/tests/''',
+    '''scripts/results/''',
     '''Cargo\.lock$''',
     '''package-lock\.json$''',
     '''pnpm-lock\.yaml$''',
