@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" width="100%" height="auto">
+  <defs>
+    <style>
+      text {
+        text-rendering: geometricPrecision;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .font-sans {
+        font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Segoe UI", "Malgun Gothic", Roboto, Helvetica, Arial, sans-serif;
+      }
+      .font-mono {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      }
+      .node-title { font-size: 14px; font-weight: 700; fill: #24292f; }
+      .node-sub { font-size: 12px; font-weight: 500; fill: #57606a; }
+      .zone-header { font-size: 12px; font-weight: 700; fill: #57606a; letter-spacing: 0.05em; }
+      .edge-text { font-size: 11px; font-weight: 600; fill: #57606a; }
+      .badge-text { font-size: 10px; font-weight: 700; }
+    </style>
+
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#6e7781"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b7a57"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#cf222e"/>
+    </marker>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="960" height="440" fill="#f8f9fa"/>
+
+  <!-- ============================================================ -->
+  <!-- ZONE 1: BROWSER RUNTIME (Chrome MV3)                         -->
+  <!-- ============================================================ -->
+  <rect x="25" y="30" width="490" height="380" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <rect x="40" y="20" width="175" height="22" rx="4" fill="#eaeef2"/>
+  <text x="127" y="35" class="font-sans zone-header" text-anchor="middle">Chrome MV3 (Browser)</text>
+
+  <!-- Node 1: Content Script -->
+  <g transform="translate(45, 65)">
+    <rect width="190" height="56" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.2"/>
+    <text x="16" y="25" class="font-sans node-title">Content Script</text>
+    <text x="16" y="43" class="font-sans node-sub">로그인 폼 감지 및 자동 주입</text>
+  </g>
+
+  <!-- Node 2: Service Worker -->
+  <g transform="translate(45, 175)">
+    <rect width="190" height="56" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.2"/>
+    <text x="16" y="25" class="font-sans node-title">Service Worker</text>
+    <text x="16" y="43" class="font-sans node-sub">IPC 라우터 &amp; eTLD+1 검증</text>
+  </g>
+
+  <!-- Node 3: Encrypted Storage -->
+  <g transform="translate(45, 285)">
+    <rect width="190" height="56" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.2"/>
+    <text x="16" y="25" class="font-sans node-title font-mono" font-size="13">chrome.storage.local</text>
+    <text x="16" y="43" class="font-sans node-sub">암호화 볼트 저장소</text>
+  </g>
+
+  <!-- Node 4: Popup Page -->
+  <g transform="translate(280, 110)">
+    <rect width="215" height="60" rx="6" fill="#ffffff" stroke="#afb8c1" stroke-width="1.4"/>
+    <text x="16" y="26" class="font-sans node-title">Popup UI</text>
+    <text x="16" y="45" class="font-sans node-sub">생체인증 호출 및 흐름 제어</text>
+  </g>
+
+  <!-- Node 5: Rust Wasm Module (Focal) -->
+  <g transform="translate(280, 240)">
+    <rect width="215" height="72" rx="6" fill="#f0f7f2" stroke="#3b7a57" stroke-width="1.5"/>
+    <rect x="145" y="8" width="60" height="18" rx="3" fill="#d8ece0"/>
+    <text x="175" y="21" class="font-mono badge-text" fill="#1b4d2e" text-anchor="middle">ZEROIZE</text>
+    <text x="16" y="26" class="font-sans node-title" fill="#1b4d2e">Rust Wasm 코어</text>
+    <text x="16" y="45" class="font-sans node-sub" fill="#295e3a">AES-256-GCM / HKDF</text>
+    <text x="16" y="61" class="font-mono node-sub" fill="#1b4d2e" font-size="11" font-weight="600">0x00 메모리 물리 소거</text>
+  </g>
+
+
+  <!-- ============================================================ -->
+  <!-- ZONE 2: OS & HARDWARE PLATFORM                               -->
+  <!-- ============================================================ -->
+  <rect x="545" y="30" width="390" height="380" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2" stroke-dasharray="5,4"/>
+  <rect x="560" y="20" width="180" height="22" rx="4" fill="#eaeef2"/>
+  <text x="650" y="35" class="font-sans zone-header" text-anchor="middle">Windows 11 (Platform)</text>
+
+  <!-- Node 6: OS WebAuthn Provider (Blocked) -->
+  <g transform="translate(570, 70)">
+    <rect width="340" height="58" rx="6" fill="#fdf2f2" stroke="#cf222e" stroke-width="1.2"/>
+    <rect x="255" y="8" width="72" height="18" rx="3" fill="#f8d7da"/>
+    <text x="291" y="21" class="font-mono badge-text" fill="#cf222e" text-anchor="middle">BLOCKED</text>
+    <text x="16" y="25" class="font-mono node-title" fill="#cf222e">webauthn.dll</text>
+    <text x="16" y="44" class="font-sans node-sub" fill="#a40e26">W3C Level 3 PRF (OS 지원 불가)</text>
+  </g>
+
+  <!-- Node 7: Native Messaging Host (Fallback Focal) -->
+  <g transform="translate(570, 175)">
+    <rect width="340" height="62" rx="6" fill="#f0f7f2" stroke="#3b7a57" stroke-width="1.5"/>
+    <rect x="250" y="8" width="78" height="18" rx="3" fill="#d8ece0"/>
+    <text x="289" y="21" class="font-mono badge-text" fill="#1b4d2e" text-anchor="middle">FALLBACK</text>
+    <text x="16" y="26" class="font-mono node-title" fill="#1b4d2e">native-host.exe</text>
+    <text x="16" y="46" class="font-sans node-sub" fill="#295e3a">ncrypt.dll 시스템 FFI 바인딩</text>
+  </g>
+
+  <!-- Node 8: TPM 2.0 Chip -->
+  <g transform="translate(570, 285)">
+    <rect width="340" height="60" rx="6" fill="#f6f8fa" stroke="#424a53" stroke-width="1.4"/>
+    <rect x="245" y="8" width="84" height="18" rx="3" fill="#eaeef2"/>
+    <text x="287" y="21" class="font-mono badge-text" fill="#24292f" text-anchor="middle">HARDWARE</text>
+    <text x="16" y="26" class="font-sans node-title">TPM 2.0 (Intel PTT)</text>
+    <text x="16" y="45" class="font-sans node-sub">HMAC-SHA256 대칭키 파생</text>
+  </g>
+
+
+  <!-- ============================================================ -->
+  <!-- CONNECTORS                                                   -->
+  <!-- ============================================================ -->
+
+  <!-- CS <-> SW -->
+  <path d="M 140,121 V 175" fill="none" stroke="#6e7781" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- SW <-> Storage -->
+  <path d="M 140,231 V 285" fill="none" stroke="#6e7781" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- SW -> Popup -->
+  <path d="M 235,195 H 258 V 145 H 280" fill="none" stroke="#6e7781" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- Popup -> Wasm -->
+  <path d="M 387,170 V 240" fill="none" stroke="#3b7a57" stroke-width="1.4" marker-end="url(#arrow-green)"/>
+  <rect x="347" y="195" width="80" height="20" rx="4" fill="#ffffff" stroke="#d0d7de" stroke-width="0.8"/>
+  <text x="387" y="209" class="font-sans edge-text" text-anchor="middle">복호화 요청</text>
+
+  <!-- Popup -> OS WebAuthn (Blocked 1st attempt) -->
+  <path d="M 495,125 H 570" fill="none" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="4,4" marker-end="url(#arrow-red)"/>
+  <rect x="502" y="113" width="62" height="20" rx="4" fill="#ffffff" stroke="#cf222e" stroke-width="0.8"/>
+  <text x="533" y="127" class="font-mono edge-text" fill="#cf222e" text-anchor="middle">1차: PRF</text>
+
+  <!-- Popup -> Native Host (Fallback 2nd attempt) -->
+  <path d="M 495,155 H 530 V 205 H 570" fill="none" stroke="#3b7a57" stroke-width="1.6" marker-end="url(#arrow-green)"/>
+  <rect x="490" y="172" width="82" height="20" rx="4" fill="#f0f7f2" stroke="#3b7a57" stroke-width="0.8"/>
+  <text x="531" y="186" class="font-sans edge-text" fill="#1b4d2e" text-anchor="middle">2차: 자동 폴백</text>
+
+  <!-- Native Host -> TPM 2.0 -->
+  <path d="M 740,237 V 285" fill="none" stroke="#3b7a57" stroke-width="1.6" marker-end="url(#arrow-green)"/>
+
+  <!-- TPM 2.0 -> Wasm (Key Return) -->
+  <path d="M 570,325 H 515 V 285 H 495" fill="none" stroke="#3b7a57" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arrow-green)"/>
+  <rect x="475" y="302" width="105" height="20" rx="4" fill="#f0f7f2" stroke="#3b7a57" stroke-width="0.8"/>
+  <text x="527" y="316" class="font-mono edge-text" fill="#1b4d2e" text-anchor="middle">32B 하드웨어 키</text>
+
+</svg>
