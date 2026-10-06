@@ -6,3 +6,4 @@
 #
 # 형식: <Fingerprint-SHA256> # <사유 및 티켓/커밋 번호>
 0e89672bd72babd362886e3163de2e5887c4fc29:scripts/results/raw-scans.json:generic-api-key:669
+79c43dc1ca21fb71ad641e9d3344179ecaa19cd5:extension/tests/popup.test.ts:generic-api-key:99
