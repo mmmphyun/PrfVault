@@ -5,3 +5,4 @@
 # 출력 결과의 'Fingerprint: <hash>' 값을 복사하여 아래에 추가합니다.
 #
 # 형식: <Fingerprint-SHA256> # <사유 및 티켓/커밋 번호>
+0e89672bd72babd362886e3163de2e5887c4fc29:scripts/results/raw-scans.json:generic-api-key:669
