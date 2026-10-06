@@ -64,6 +64,7 @@ pub struct NCryptBufferDesc {
     pub pBuffers: *mut NCryptBuffer,
 }
 
+#[cfg(target_os = "windows")]
 #[link(name = "ncrypt")]
 unsafe extern "system" {
     fn NCryptOpenStorageProvider(
@@ -102,6 +103,57 @@ unsafe extern "system" {
         pcbResult: *mut u32,
         dwFlags: u32,
     ) -> i32;
+}
+
+#[cfg(not(target_os = "windows"))]
+#[allow(non_snake_case)]
+unsafe fn NCryptOpenStorageProvider(_: *mut usize, _: *const u16, _: u32) -> i32 {
+    NTE_DEVICE_NOT_READY
+}
+
+#[cfg(not(target_os = "windows"))]
+#[allow(non_snake_case)]
+unsafe fn NCryptFreeObject(_: usize) -> i32 {
+    ERROR_SUCCESS
+}
+
+#[cfg(not(target_os = "windows"))]
+#[allow(non_snake_case)]
+unsafe fn NCryptOpenKey(_: usize, _: *mut usize, _: *const u16, _: u32, _: u32) -> i32 {
+    NTE_DEVICE_NOT_READY
+}
+
+#[cfg(not(target_os = "windows"))]
+#[allow(non_snake_case)]
+unsafe fn NCryptCreatePersistedKey(
+    _: usize,
+    _: *mut usize,
+    _: *const u16,
+    _: *const u16,
+    _: u32,
+    _: u32,
+) -> i32 {
+    NTE_DEVICE_NOT_READY
+}
+
+#[cfg(not(target_os = "windows"))]
+#[allow(non_snake_case)]
+unsafe fn NCryptFinalizeKey(_: usize, _: u32) -> i32 {
+    NTE_DEVICE_NOT_READY
+}
+
+#[cfg(not(target_os = "windows"))]
+#[allow(non_snake_case)]
+unsafe fn NCryptDeriveKey(
+    _: usize,
+    _: *const u16,
+    _: *const NCryptBufferDesc,
+    _: *mut u8,
+    _: u32,
+    _: *mut u32,
+    _: u32,
+) -> i32 {
+    NTE_DEVICE_NOT_READY
 }
 
 // ============================================================================
