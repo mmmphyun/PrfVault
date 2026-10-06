@@ -12,10 +12,7 @@ pub enum HostRequest {
     #[serde(rename = "PING")]
     Ping,
     #[serde(rename = "PRF_DERIVE")]
-    PrfDerive {
-        domain: String,
-        challenge: String,
-    },
+    PrfDerive { domain: String, challenge: String },
 }
 
 /// 공통 실패 응답 구조체
@@ -141,7 +138,9 @@ pub fn handle_message(raw_bytes: &[u8]) -> (Vec<u8>, bool) {
                     let resp = ErrorResponse {
                         status: "ERROR".to_string(),
                         code: "USER_CANCELLED".to_string(),
-                        message: Some("사용자에 의해 Windows Hello 인증이 취소되었습니다.".to_string()),
+                        message: Some(
+                            "사용자에 의해 Windows Hello 인증이 취소되었습니다.".to_string(),
+                        ),
                     };
                     let body = serde_json::to_vec(&resp).unwrap_or_default();
                     (body, false)
@@ -324,7 +323,10 @@ mod tests {
     fn test_handle_message_invalid_payload_failsafe() {
         let invalid_msg = b"malformed json payload";
         let (resp_bytes, should_exit) = handle_message(invalid_msg);
-        assert!(should_exit, "유효하지 않은 페이로드는 Fail-safe 종료를 유발해야 함");
+        assert!(
+            should_exit,
+            "유효하지 않은 페이로드는 Fail-safe 종료를 유발해야 함"
+        );
 
         let v: serde_json::Value = serde_json::from_slice(&resp_bytes).unwrap();
         assert_eq!(v["status"], "ERROR");

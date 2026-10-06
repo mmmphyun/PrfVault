@@ -16,19 +16,19 @@ use std::fmt;
 #[allow(dead_code)]
 pub const ERROR_SUCCESS: i32 = 0;
 #[allow(dead_code)]
-pub const NTE_BAD_KEYSET: i32 = -2146893802;        // 0x80090016
+pub const NTE_BAD_KEYSET: i32 = -2146893802; // 0x80090016
 #[allow(dead_code)]
-pub const NTE_NOT_SUPPORTED: i32 = -2146893783;     // 0x80090029
+pub const NTE_NOT_SUPPORTED: i32 = -2146893783; // 0x80090029
 #[allow(dead_code)]
-pub const NTE_USER_CANCELLED: i32 = -2146893770;    // 0x80090036
+pub const NTE_USER_CANCELLED: i32 = -2146893770; // 0x80090036
 #[allow(dead_code)]
 pub const NTE_INVALID_PARAMETER: i32 = -2146893785; // 0x80090027
 #[allow(dead_code)]
-pub const NTE_DEVICE_NOT_READY: i32 = -2146893776;  // 0x80090030
+pub const NTE_DEVICE_NOT_READY: i32 = -2146893776; // 0x80090030
 #[allow(dead_code)]
-pub const NTE_NO_KEY: i32 = -2146893811;            // 0x8009000D
+pub const NTE_NO_KEY: i32 = -2146893811; // 0x8009000D
 #[allow(dead_code)]
-pub const NTE_EXISTS: i32 = -2146893809;            // 0x8009000F
+pub const NTE_EXISTS: i32 = -2146893809; // 0x8009000F
 #[allow(dead_code)]
 pub const SCARD_W_CANCELLED_BY_USER: i32 = -2146435986; // 0x8010006E
 #[allow(dead_code)]
@@ -91,10 +91,7 @@ unsafe extern "system" {
         dwFlags: u32,
     ) -> i32;
 
-    fn NCryptFinalizeKey(
-        hKey: usize,
-        dwFlags: u32,
-    ) -> i32;
+    fn NCryptFinalizeKey(hKey: usize, dwFlags: u32) -> i32;
 
     fn NCryptDeriveKey(
         hKey: usize,
@@ -147,7 +144,10 @@ impl fmt::Display for WindowsHelloError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::UserCancelled => write!(f, "사용자에 의해 Windows Hello 인증이 취소되었습니다."),
-            Self::HardwareUnavailable(msg) => write!(f, "하드웨어 보안 모듈(TPM 2.0/Windows Hello) 사용 불가: {msg}"),
+            Self::HardwareUnavailable(msg) => write!(
+                f,
+                "하드웨어 보안 모듈(TPM 2.0/Windows Hello) 사용 불가: {msg}"
+            ),
             Self::InvalidParameter(msg) => write!(f, "유효하지 않은 매개변수: {msg}"),
             Self::Internal(msg) => write!(f, "Windows CNG 내부 오류: {msg}"),
         }
@@ -203,9 +203,8 @@ pub fn derive_hardware_prf(domain: &str, challenge: &[u8]) -> Result<[u8; 32], W
     let mut connected = false;
 
     for wide_name in &providers {
-        let status = unsafe {
-            NCryptOpenStorageProvider(&mut provider_handle, wide_name.as_ptr(), 0)
-        };
+        let status =
+            unsafe { NCryptOpenStorageProvider(&mut provider_handle, wide_name.as_ptr(), 0) };
         if status == ERROR_SUCCESS {
             connected = true;
             break;
@@ -228,9 +227,8 @@ pub fn derive_hardware_prf(domain: &str, challenge: &[u8]) -> Result<[u8; 32], W
     let key_name_w = to_wide_null(&format!("PrfVault_{domain}"));
     let mut key_handle = 0usize;
 
-    let mut status = unsafe {
-        NCryptOpenKey(provider.0, &mut key_handle, key_name_w.as_ptr(), 0, 0)
-    };
+    let mut status =
+        unsafe { NCryptOpenKey(provider.0, &mut key_handle, key_name_w.as_ptr(), 0, 0) };
 
     if status == NTE_BAD_KEYSET || status == NTE_NO_KEY {
         let alg_w = to_wide_null("ECDSA_P256");
@@ -309,9 +307,9 @@ pub fn derive_hardware_prf(domain: &str, challenge: &[u8]) -> Result<[u8; 32], W
     if derive_status != ERROR_SUCCESS {
         return Err(match derive_status {
             NTE_USER_CANCELLED | SCARD_W_CANCELLED_BY_USER => WindowsHelloError::UserCancelled,
-            NTE_NOT_SUPPORTED | NTE_INVALID_PARAMETER => WindowsHelloError::HardwareUnavailable(format!(
-                "하드웨어 KDF 미지원 (상태 코드: {derive_status:#X})"
-            )),
+            NTE_NOT_SUPPORTED | NTE_INVALID_PARAMETER => WindowsHelloError::HardwareUnavailable(
+                format!("하드웨어 KDF 미지원 (상태 코드: {derive_status:#X})"),
+            ),
             _ => WindowsHelloError::Internal(format!(
                 "NCryptDeriveKey 실패 (상태 코드: {derive_status:#X})"
             )),
