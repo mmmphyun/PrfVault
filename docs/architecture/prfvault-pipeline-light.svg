@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260" width="100%" height="auto">
+  <defs>
+    <style>
+      text {
+        text-rendering: geometricPrecision;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .font-sans {
+        font-family: "Malgun Gothic", "맑은 고딕", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+      }
+      .font-mono {
+        font-family: Consolas, "Courier New", ui-monospace, SFMono-Regular, "SF Mono", monospace;
+      }
+      .node-title { font-size: 13px; font-weight: 700; fill: #24292f; }
+      .node-sub { font-size: 11px; font-weight: 500; fill: #57606a; }
+      .edge-text { font-size: 11px; font-weight: 600; fill: #57606a; }
+      .badge-text { font-size: 10px; font-weight: 700; }
+    </style>
+
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#6e7781"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b7a57"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#cf222e"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#b45309"/>
+    </marker>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="960" height="260" fill="#f8f9fa"/>
+
+  <!-- ============================================================ -->
+  <!-- COLUMN 1: TRIGGER (x: 30 ~ 160)                              -->
+  <!-- ============================================================ -->
+  <g transform="translate(30, 105)">
+    <rect width="130" height="50" rx="6" fill="#ffffff" stroke="#afb8c1" stroke-width="1.3"/>
+    <text x="14" y="24" class="font-sans node-title">볼트 잠금 해제</text>
+    <text x="14" y="40" class="font-sans node-sub">사용자 제스처 트리거</text>
+  </g>
+
+
+  <!-- ============================================================ -->
+  <!-- COLUMN 2: INTERFACES (x: 235 ~ 435)                          -->
+  <!-- ============================================================ -->
+
+  <!-- Node A1: W3C PRF Request -->
+  <g transform="translate(235, 45)">
+    <rect width="200" height="48" rx="6" fill="#ffffff" stroke="#d0d7de" stroke-width="1.2"/>
+    <text x="14" y="22" class="font-mono node-title" font-size="12">navigator.credentials</text>
+    <text x="14" y="38" class="font-sans node-sub">W3C Level 3 PRF 요청</text>
+  </g>
+
+  <!-- Node B1: Native Host IPC -->
+  <g transform="translate(235, 165)">
+    <rect width="200" height="48" rx="6" fill="#ffffff" stroke="#bfe3cc" stroke-width="1.2"/>
+    <text x="14" y="22" class="font-mono node-title" font-size="12">native-host.exe</text>
+    <text x="14" y="38" class="font-sans node-sub">Chrome Native Messaging</text>
+  </g>
+
+
+  <!-- ============================================================ -->
+  <!-- COLUMN 3: PLATFORM & HARDWARE (x: 490 ~ 690)                 -->
+  <!-- ============================================================ -->
+
+  <!-- Node A2: webauthn.dll Blocked -->
+  <g transform="translate(490, 45)">
+    <rect width="200" height="48" rx="6" fill="#fdf2f2" stroke="#cf222e" stroke-width="1.2"/>
+    <rect x="120" y="7" width="72" height="17" rx="3" fill="#f8d7da"/>
+    <text x="156" y="19" class="font-mono badge-text" fill="#cf222e" text-anchor="middle">{"prf":false}</text>
+    <text x="14" y="22" class="font-mono node-title" font-size="12" fill="#cf222e">webauthn.dll</text>
+    <text x="14" y="38" class="font-sans node-sub" fill="#a40e26">플랫폼 인증자 PRF 거부</text>
+  </g>
+
+  <!-- Node B2: TPM 2.0 via ncrypt.dll -->
+  <g transform="translate(490, 165)">
+    <rect width="200" height="48" rx="6" fill="#f0f7f2" stroke="#3b7a57" stroke-width="1.3"/>
+    <rect x="122" y="7" width="70" height="17" rx="3" fill="#d8ece0"/>
+    <text x="157" y="19" class="font-mono badge-text" fill="#1b4d2e" text-anchor="middle">HARDWARE</text>
+    <text x="14" y="22" class="font-sans node-title" font-size="12">ncrypt.dll FFI</text>
+    <text x="14" y="38" class="font-sans node-sub">TPM 2.0 대칭키 직접 파생</text>
+  </g>
+
+
+  <!-- ============================================================ -->
+  <!-- COLUMN 4: CORE CONVERGENCE (x: 755 ~ 945, width: 190)        -->
+  <!-- ============================================================ -->
+
+  <!-- Node C1: Rust Wasm Core & Zeroize -->
+  <g transform="translate(755, 100)">
+    <rect width="190" height="60" rx="6" fill="#f0f7f2" stroke="#3b7a57" stroke-width="1.4"/>
+    <rect x="122" y="7" width="60" height="17" rx="3" fill="#d8ece0"/>
+    <text x="152" y="19" class="font-mono badge-text" fill="#1b4d2e" text-anchor="middle">ZEROIZE</text>
+    <text x="14" y="23" class="font-sans node-title" font-size="12" fill="#1b4d2e">Rust Wasm</text>
+    <text x="14" y="40" class="font-sans node-sub" fill="#295e3a">AES-256-GCM 복호화</text>
+    <text x="14" y="52" class="font-mono node-sub" fill="#1b4d2e" font-size="10" font-weight="600">0x00 메모리 물리 소거</text>
+  </g>
+
+
+  <!-- ============================================================ -->
+  <!-- CONNECTORS (INSPECTED & POLISHED)                            -->
+  <!-- ============================================================ -->
+
+  <!-- 1. Start -> A1 (1차 표준 시도) -->
+  <path d="M 160,120 H 195 V 69 H 235" fill="none" stroke="#6e7781" stroke-width="1.3" marker-end="url(#arrow-gray)"/>
+  <rect x="168" y="56" width="54" height="18" rx="3" fill="#ffffff" stroke="#d0d7de" stroke-width="0.8"/>
+  <text x="195" y="69" class="font-sans edge-text" text-anchor="middle">1차 시도</text>
+
+  <!-- 2. Start -> B1 (2차 직접 폴백) -->
+  <path d="M 160,140 H 195 V 189 H 235" fill="none" stroke="#6e7781" stroke-width="1.3" marker-end="url(#arrow-gray)"/>
+  <rect x="168" y="196" width="54" height="18" rx="3" fill="#ffffff" stroke="#d0d7de" stroke-width="0.8"/>
+  <text x="195" y="209" class="font-sans edge-text" text-anchor="middle">미지원 시</text>
+
+  <!-- 3. A1 -> A2 (표준 요청 직진) -->
+  <path d="M 435,69 H 490" fill="none" stroke="#cf222e" stroke-width="1.3" marker-end="url(#arrow-red)"/>
+
+  <!-- 4. A2 -> B2 (거부 감지 시 수직 폴백 직하강) -->
+  <path d="M 590,93 V 165" fill="none" stroke="#b45309" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-amber)"/>
+  <rect x="530" y="119" width="120" height="19" rx="3" fill="#fffbeb" stroke="#fcd34d" stroke-width="0.8"/>
+  <text x="590" y="133" class="font-sans edge-text" fill="#b45309" text-anchor="middle">거부 감지 시 폴백</text>
+
+  <!-- 5. B1 -> B2 (Native Host -> TPM 키 도출 직진) -->
+  <path d="M 435,189 H 490" fill="none" stroke="#3b7a57" stroke-width="1.4" marker-end="url(#arrow-green)"/>
+
+  <!-- 6. B2 -> C1 (32B 대칭키 전달) -->
+  <path d="M 690,189 H 722 V 130 H 755" fill="none" stroke="#3b7a57" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <rect x="695" y="150" width="54" height="18" rx="3" fill="#f0f7f2" stroke="#3b7a57" stroke-width="0.8"/>
+  <text x="722" y="163" class="font-mono edge-text" fill="#1b4d2e" text-anchor="middle">32B 키</text>
+
+</svg>

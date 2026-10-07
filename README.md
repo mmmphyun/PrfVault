@@ -45,29 +45,29 @@ PrfVault는 중앙 인증 서버에 의존하지 않고 사용자 기기의 하�
 
 ## 3. Windows Hello / TPM 2.0 Native Host 하이브리드 파이프라인
 
-W3C WebAuthn Level 3 PRF 확장의 브라우저 지원 파편화와 OS 제약을 극복하기 위해 Windows CNG 기반 Native Messaging Host 하이브리드 파이프라인을 구축했습니다.
+W3C WebAuthn Level 3 PRF 확장의 브라우저 지원 파편화와 운영체제 제약을 극복하기 위해 Windows CNG 기반 Native Messaging Host 하이브리드 파이프라인을 구축했습니다.
 
-```mermaid
-flowchart LR
-    UnlockReq["볼트 잠금 해제 요청"] --> CheckAuthn{"WebAuthn PRF<br/>지원 여부"}
-    CheckAuthn -- "지원 (Level 3)" --> WebAuthnFlow["navigator.credentials.get()<br/>(PRF 확장)"]
-    CheckAuthn -- "미지원 / 실패" --> NativeFlow["Chrome Native Messaging<br/>(native-host.exe)"]
-    NativeFlow --> NCryptFFI["OS 내장 ncrypt.dll FFI<br/>(Microsoft Platform Crypto Provider)"]
-    NCryptFFI --> TPMAuth["Windows Hello / TPM 2.0<br/>하드웨어 격리 키 도출"]
-    WebAuthnFlow --> MasterKey["HKDF-SHA256 마스터 키 도출<br/>(Rust Wasm 선형 메모리)"]
-    TPMAuth --> MasterKey
-    MasterKey --> VaultUnlock["볼트 복호화 완료 (AES-256-GCM)<br/>메모리 Zeroize 소거"]
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/prfvault-pipeline-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/architecture/prfvault-pipeline-light.svg">
+    <img alt="PrfVault Hybrid Fallback Pipeline" src="docs/architecture/prfvault-pipeline-light.svg" width="100%">
+  </picture>
+</p>
 
-### 3.1 기술적 구현 및 OS 레벨 인터페이스 차단 실증
-* **OS 내장 ncrypt.dll 직접 바인딩**:
-  * 외부 서드파티 라이브러리 없이 Windows CNG 시스템 심볼을 Rust FFI로 직접 바인딩했습니다.
-  * 불필요한 의존성을 제거해 공급망 공격 표면을 줄였습니다.
+### 3.1 기술적 구현 및 플랫폼 인터페이스 차단 실증
+
+* **표준 우선주의 하이브리드 설계**:
+  * 운영체제 레벨의 차단이 확인되었음에도 네이티브 바이너리 단독 구조로 축소하지 않고 웹 표준 호출을 1차 진입점으로 유지했습니다.
+  * 외장 FIDO2 보안키를 연결하거나 향후 운영체제 업데이트로 기능이 개방될 때, 추가 권한 없이 브라우저 격리 환경 안에서 즉시 키를 도출할 수 있도록 표준 호환성을 보장하기 위함입니다.
+* **운영체제 내장 ncrypt.dll 직접 바인딩**:
+  * 외부 암호화 라이브러리를 거치지 않고 Windows CNG 시스템 심볼을 Rust FFI로 직접 바인딩했습니다.
+  * 불필요한 서드파티 의존성을 없애 소프트웨어 공급망 공격에 노출되는 범위를 최소화했습니다.
 * **실기 테스트를 통한 플랫폼 제약 실증**:
-  * Windows 11 실기(Intel PTT TPM 2.0) 환경에서 브라우저는 PRF 확장을 지원한다고 알렸으나, OS 계층(`webauthn.dll`)이 내장 TPM 인증자에 대해 PRF 확장을 명시적으로 거부(`{"prf": {"enabled": false}}`)하는 현상을 실측 검증했습니다.
-  * 이는 글로벌 패스워드 매니저인 Bitwarden(Issue #19858)에서도 확인된 플랫폼 레벨의 제약입니다.
+  * Intel PTT TPM 2.0 기반 Windows 11 실기 환경에서 브라우저는 PRF 확장을 지원한다고 알렸으나, 운영체제 계층(`webauthn.dll`)이 내장 TPM 인증자에 대해 PRF 확장을 명시적으로 거부(`{"prf": {"enabled": false}}`)하는 현상을 실측했습니다.
+  * 이는 글로벌 패스워드 매니저인 Bitwarden(Issue #19858)에서도 확인된 플랫폼 레벨의 구조적 한계입니다.
 * **자동 폴백 파이프라인**:
-  * 웹 표준 PRF 호출이 차단될 경우 Chrome Native Messaging Host로 자동 전환되어 Windows Hello TPM 2.0 하드웨어 엔클레이브에서 256비트 대칭키를 직접 파생합니다.
+  * 웹 표준 PRF 호출이 차단되는 즉시 Chrome Native Messaging Host로 자동 전환되어 Windows Hello TPM 2.0 하드웨어 엔클레이브에서 256비트 대칭키를 직접 파생합니다.
 
 ---
 

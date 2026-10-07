@@ -7,10 +7,10 @@
         -moz-osx-font-smoothing: grayscale;
       }
       .font-sans {
-        font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Segoe UI", "Malgun Gothic", Roboto, Helvetica, Arial, sans-serif;
+        font-family: "Malgun Gothic", "맑은 고딕", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
       }
       .font-mono {
-        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+        font-family: Consolas, "Courier New", ui-monospace, SFMono-Regular, "SF Mono", monospace;
       }
       .node-title { font-size: 14px; font-weight: 700; fill: #24292f; }
       .node-sub { font-size: 12px; font-weight: 500; fill: #57606a; }
