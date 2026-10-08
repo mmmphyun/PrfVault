@@ -34,6 +34,14 @@ PrfVault는 중앙 인증 서버에 의존하지 않고 사용자 기기의 하�
   </picture>
 </p>
 
+* **아키텍처 데이터 흐름 및 보안 인터페이스 규약**:
+  * **① IPC 통신**: 로그인 폼을 감지한 Content Script가 확장 백그라운드 Service Worker로 비동기 인증 요청 전달.
+  * **② 볼트 I/O**: Service Worker가 로컬 저장소(`chrome.storage.local`)에서 AES 암호화된 볼트 블록을 읽기/쓰기.
+  * **③ 메모리 격리**: Rust Wasm 코어와 격리된 선형 메모리 버퍼를 통해서만 복호화 연산을 수행하고 즉시 zeroize 소거.
+  * **④ Native IPC**: 플랫폼 차단 감지 시 Chrome Native Messaging 프로토콜을 통해 로컬 호스트 프로세스로 전환.
+  * **⑤ C-FFI 바인딩**: Native Host가 Windows CNG `ncrypt.dll` 시스템 API를 바인딩하여 TPM 2.0 하드웨어 엔클레이브 호출.
+  * **⑥ 대칭키 반환**: TPM 2.0에서 도출된 256비트 대칭키를 Wasm 코어로 안전하게 전달하여 메모리 내 복호화 완료.
+
 * **Zero-Server 로컬 완결성**: 외부 원격 서버 및 클라우드 데이터베이스 통신을 일체 배제하고 클라이언트 단독으로 완결되는 구조.
 * **하드웨어 대칭키 직접 파생**: TPM 2.0 내부 격리 키와 사용자 생체인증을 결합하여 256비트 대칭키 도출.
 * **선형 메모리 소거와 심층 방어**:
@@ -54,6 +62,13 @@ W3C WebAuthn Level 3 PRF 확장의 브라우저 지원 파편화와 운영체제
     <img alt="PrfVault Hybrid Fallback Pipeline" src="docs/architecture/prfvault-pipeline-light.svg" width="100%">
   </picture>
 </p>
+
+* **하이브리드 파이프라인 단계별 동작 규약**:
+  * **① 1차 표준 호출**: 사용자 제스처 기반으로 브라우저 W3C WebAuthn Level 3 PRF 확장을 최우선 호출.
+  * **② 2차 자동 폴백**: 운영체제 계층의 PRF 거부(`{"prf": {"enabled": false}}`) 감지 즉시 Chrome Native Messaging Host로 무중단 전환.
+  * **③ 표준 시드 전달**: PRF 성공 시 브라우저 내부에서 파생된 하드웨어 바인딩 엔트로피를 Wasm 코어로 직접 공급.
+  * **④ C-FFI 시스템 바인딩**: Native Host가 Windows CNG API(`ncrypt.dll`)를 호출하여 Windows Hello 생체 인증 및 TPM 2.0 엔클레이브 격리 키 요청.
+  * **⑤ 하드웨어 대칭키 유도**: TPM 2.0에서 유도된 비밀키를 Wasm 코어로 전달하여 메모리 내 HKDF 마스터 키 파생 및 `zeroize` 물리 소거 완료.
 
 ### 3.1 기술적 구현 및 플랫폼 인터페이스 차단 실증
 
