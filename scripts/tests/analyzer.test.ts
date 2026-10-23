@@ -17,7 +17,7 @@ import {
   formatAnalysisReport,
   type BenchmarkAnalysisReport,
 } from '../benchmark/analyzer.ts';
-import { type ScanResult } from '../benchmark/scanner.ts';
+import type { ScanResult } from '../benchmark/scanner.ts';
 
 async function runTests() {
   console.log('--- [Test 1] 섀넌 엔트로피 및 손실률 수학 공식 무결성 검증 ---');

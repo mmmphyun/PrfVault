@@ -79,3 +79,6 @@ ehthumbs.db
 *.swo
 HANDOVER.md
 .session-memory/
+
+# Temporary work directories
+_workspace/
