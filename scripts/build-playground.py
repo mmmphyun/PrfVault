@@ -24,30 +24,31 @@ html_content = f"""<!DOCTYPE html>
     <title>PrfVault Playground · 비표준 인증 보안 인터페이스 실증</title>
     <style>
         :root {{
-            --bg: #080a0f;
-            --surface: #10131c;
-            --surface-hover: #161b26;
-            --border: #1e2536;
-            --border-subtle: #151a26;
-            --text-title: #f8fafc;
-            --text-body: #cbd5e1;
-            --text-muted: #718096;
-            --accent: #38bdf8;
-            --accent-dim: rgba(56, 189, 248, 0.08);
-            --amber: #fbbf24;
-            --amber-dim: rgba(251, 191, 36, 0.08);
+            --bg: #09090b;
+            --surface: #141417;
+            --surface-hover: #1c1c20;
+            --border: #27272a;
+            --border-subtle: #18181b;
+            --text-title: #fafafa;
+            --text-body: #d4d4d8;
+            --text-muted: #71717a;
+            --accent: #fafafa;
+            --accent-hover: #e4e4e7;
+            --accent-contrast: #09090b;
+            --amber: #d97706;
+            --amber-dim: rgba(217, 119, 6, 0.08);
             --amber-text: #fef3c7;
-            --emerald: #34d399;
-            --emerald-dim: rgba(52, 211, 153, 0.08);
+            --emerald: #10b981;
+            --emerald-dim: rgba(16, 185, 129, 0.08);
             --emerald-text: #d1fae5;
-            --rose: #fb7185;
-            --rose-dim: rgba(251, 113, 133, 0.08);
+            --rose: #e11d48;
+            --rose-dim: rgba(225, 29, 72, 0.08);
             --rose-text: #ffe4e6;
-            --terminal-bg: #05070c;
-            --track-bg: #181d2a;
-            --byte-zero: #334155;
-            --ascii-active: #86efac;
-            --ascii-zero: #1e293b;
+            --terminal-bg: #050507;
+            --track-bg: #1c1c21;
+            --byte-zero: #3f3f46;
+            --ascii-active: #a7f3d0;
+            --ascii-zero: #27272a;
             --mono: "SF Mono", Monaco, Consolas, "Liberation Mono", Courier, monospace;
         }}
 
@@ -59,7 +60,7 @@ html_content = f"""<!DOCTYPE html>
             font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
             font-size: 15px;
             line-height: 1.7;
-            padding: 64px 32px;
+            padding: 72px 32px;
             -webkit-font-smoothing: antialiased;
         }}
 
@@ -68,36 +69,37 @@ html_content = f"""<!DOCTYPE html>
             margin: 0 auto;
         }}
 
+        /* 헤더: 여백과 절제된 흑백 타이포그래피 */
         header.wb-header {{
-            margin-bottom: 48px;
-            padding-bottom: 32px;
+            margin-bottom: 56px;
+            padding-bottom: 40px;
             border-bottom: 1px solid var(--border-subtle);
         }}
 
         .meta-eyebrow {{
             font-size: 12px;
             font-weight: 600;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 12px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
         }}
 
         h1.paper-heading {{
-            font-size: 25px;
+            font-size: 26px;
             font-weight: 700;
             color: var(--text-title);
             line-height: 1.45;
             letter-spacing: -0.015em;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }}
 
         .purpose-statement {{
             font-size: 15.5px;
-            color: var(--text-muted);
-            line-height: 1.7;
-            padding-left: 18px;
-            border-left: 3px solid var(--accent);
+            color: #a1a1aa;
+            line-height: 1.75;
+            padding-left: 20px;
+            border-left: 3px solid var(--text-muted);
         }}
 
         .wasm-pill {{
@@ -107,7 +109,7 @@ html_content = f"""<!DOCTYPE html>
             font-size: 12.5px;
             font-family: var(--mono);
             color: var(--text-muted);
-            margin-top: 18px;
+            margin-top: 22px;
         }}
 
         .status-dot {{
@@ -117,8 +119,9 @@ html_content = f"""<!DOCTYPE html>
             background-color: var(--emerald);
         }}
 
+        /* 1단계, 2단계, 3단계 사이의 넉넉한 수직 여백 (64px) */
         .wb-section {{
-            padding: 36px 0;
+            padding: 64px 0;
             border-bottom: 1px solid var(--border-subtle);
         }}
 
@@ -126,15 +129,15 @@ html_content = f"""<!DOCTYPE html>
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 18px;
+            margin-bottom: 22px;
         }}
 
         .section-label {{
-            font-size: 13px;
+            font-size: 13.5px;
             font-weight: 700;
-            color: var(--accent);
+            color: var(--text-title);
             font-family: var(--mono);
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
         }}
 
         .section-desc {{
@@ -142,11 +145,12 @@ html_content = f"""<!DOCTYPE html>
             color: var(--text-muted);
         }}
 
+        /* 1단계: 도메인 칩 및 입력 */
         .chip-group {{
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }}
 
         .chip-btn {{
@@ -154,22 +158,21 @@ html_content = f"""<!DOCTYPE html>
             border: 1px solid var(--border);
             color: var(--text-muted);
             font-size: 13px;
-            padding: 6px 13px;
+            padding: 6px 14px;
             border-radius: 5px;
             cursor: pointer;
             transition: all 0.15s;
         }}
 
         .chip-btn:hover {{
-            border-color: var(--accent);
+            border-color: var(--text-muted);
             color: var(--text-title);
-            background: var(--accent-dim);
         }}
 
         .chip-btn.active {{
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-dim);
+            border-color: var(--text-title);
+            color: var(--text-title);
+            background: var(--surface);
         }}
 
         .input-row {{
@@ -183,19 +186,19 @@ html_content = f"""<!DOCTYPE html>
             border: 1px solid var(--border);
             color: var(--text-title);
             font-size: 14.5px;
-            padding: 10px 14px;
+            padding: 11px 15px;
             border-radius: 5px;
             outline: none;
             transition: border-color 0.15s;
         }}
 
-        input:focus {{ border-color: var(--accent); }}
+        input:focus {{ border-color: var(--text-muted); }}
 
         .domain-input {{ flex: 1; }}
 
         .diag-feedback {{
-            margin-top: 16px;
-            padding: 14px 18px;
+            margin-top: 18px;
+            padding: 16px 20px;
             border-left: 3px solid var(--border);
             font-size: 14px;
             line-height: 1.6;
@@ -220,39 +223,41 @@ html_content = f"""<!DOCTYPE html>
             color: var(--emerald-text);
         }}
 
+        /* 2단계: 적응형 암호화 & 엔트로피 지표 */
         .gen-grid {{
             display: grid;
             grid-template-columns: 1.15fr 1fr;
-            gap: 36px;
+            gap: 48px;
             align-items: start;
         }}
 
         @media (max-width: 820px) {{
-            .gen-grid {{ grid-template-columns: 1fr; gap: 24px; }}
+            .gen-grid {{ grid-template-columns: 1fr; gap: 28px; }}
         }}
 
-        .field {{ margin-bottom: 16px; }}
+        .field {{ margin-bottom: 18px; }}
 
         .field label {{
             display: block;
             font-size: 13px;
             color: var(--text-muted);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }}
 
+        /* 모던 미니멀 솔리드 화이트 버튼 (Apple/Vercel 스타일) */
         .btn-action {{
             background: var(--accent);
-            color: var(--bg);
+            color: var(--accent-contrast);
             font-weight: 600;
             font-size: 13.5px;
-            padding: 10px 18px;
+            padding: 11px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: opacity 0.15s;
+            transition: background 0.15s, opacity 0.15s;
         }}
 
-        .btn-action:hover {{ opacity: 0.9; }}
+        .btn-action:hover {{ background: var(--accent-hover); }}
 
         .btn-action:disabled {{
             background: var(--border);
@@ -265,10 +270,11 @@ html_content = f"""<!DOCTYPE html>
             border: 1px solid var(--border);
             color: var(--text-body);
             font-size: 13px;
-            padding: 9px 14px;
+            padding: 10px 16px;
             border-radius: 5px;
             cursor: pointer;
             margin-left: 8px;
+            transition: all 0.15s;
         }}
 
         .btn-secondary:hover {{
@@ -278,22 +284,22 @@ html_content = f"""<!DOCTYPE html>
 
         .pw-output {{
             font-family: var(--mono);
-            color: var(--accent);
+            color: var(--text-title);
             font-size: 15px;
             font-weight: 600;
             width: 100%;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
         }}
 
         .entropy-panel {{ padding-top: 6px; }}
 
-        .bar-group {{ margin-bottom: 16px; }}
+        .bar-group {{ margin-bottom: 20px; }}
 
         .bar-head {{
             display: flex;
             justify-content: space-between;
             font-size: 13px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }}
 
         .track {{
@@ -307,14 +313,14 @@ html_content = f"""<!DOCTYPE html>
 
         .stats-pair {{
             display: flex;
-            gap: 32px;
-            margin-top: 20px;
-            padding-top: 16px;
+            gap: 36px;
+            margin-top: 24px;
+            padding-top: 20px;
             border-top: 1px solid var(--border-subtle);
         }}
 
         .stat-item .stat-num {{
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             color: var(--text-title);
         }}
@@ -322,17 +328,18 @@ html_content = f"""<!DOCTYPE html>
         .stat-item .stat-lbl {{
             font-size: 12px;
             color: var(--text-muted);
-            margin-top: 2px;
+            margin-top: 4px;
         }}
 
+        /* 3단계: Wasm 선형 메모리 헥스 덤프 콘솔 (차분한 흑백 톤) */
         .terminal-box {{
             background: var(--terminal-bg);
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 18px 22px;
+            padding: 20px 24px;
             font-family: var(--mono);
             font-size: 13px;
-            margin-top: 14px;
+            margin-top: 16px;
         }}
 
         .terminal-bar {{
@@ -340,17 +347,17 @@ html_content = f"""<!DOCTYPE html>
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 10px;
-            margin-bottom: 12px;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
             color: var(--text-muted);
             font-size: 12px;
         }}
 
         .hex-dump {{
-            max-height: 200px;
+            max-height: 220px;
             overflow-x: auto;
             color: var(--text-muted);
-            line-height: 1.7;
+            line-height: 1.75;
         }}
 
         .hex-line {{
@@ -360,13 +367,13 @@ html_content = f"""<!DOCTYPE html>
         }}
 
         .addr {{ color: var(--text-muted); }}
-        .bytes.active {{ color: var(--accent); }}
+        .bytes.active {{ color: var(--text-title); }}
         .bytes.zero {{ color: var(--byte-zero); }}
         .ascii.active {{ color: var(--ascii-active); }}
         .ascii.zero {{ color: var(--ascii-zero); }}
 
         .terminal-ctrl {{
-            margin-top: 16px;
+            margin-top: 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -383,14 +390,15 @@ html_content = f"""<!DOCTYPE html>
         .mock-login-inline {{
             display: flex;
             gap: 10px;
-            margin-top: 16px;
+            margin-top: 20px;
             align-items: center;
         }}
 
+        /* 하단 50대 실측 플랫 테이블 */
         .table-wrap {{
-            max-height: 360px;
+            max-height: 380px;
             overflow-y: auto;
-            margin-top: 16px;
+            margin-top: 20px;
             border-top: 1px solid var(--border-subtle);
         }}
 
@@ -404,7 +412,7 @@ html_content = f"""<!DOCTYPE html>
         table.flat-table th {{
             color: var(--text-muted);
             font-weight: 600;
-            padding: 11px 14px;
+            padding: 12px 14px;
             border-bottom: 1px solid var(--border);
             font-size: 12.5px;
             position: sticky;
@@ -413,7 +421,7 @@ html_content = f"""<!DOCTYPE html>
         }}
 
         table.flat-table td {{
-            padding: 9px 14px;
+            padding: 10px 14px;
             border-bottom: 1px solid var(--border-subtle);
             color: var(--text-muted);
         }}
@@ -426,7 +434,7 @@ html_content = f"""<!DOCTYPE html>
         .tbl-btn {{
             background: none;
             border: none;
-            color: var(--accent);
+            color: var(--text-title);
             cursor: pointer;
             font-family: inherit;
             font-size: 13.5px;
@@ -437,8 +445,8 @@ html_content = f"""<!DOCTYPE html>
         .tbl-btn:hover {{ text-decoration: underline; }}
 
         footer.wb-footer {{
-            margin-top: 56px;
-            padding-top: 24px;
+            margin-top: 64px;
+            padding-top: 28px;
             border-top: 1px solid var(--border-subtle);
             font-size: 12.5px;
             color: var(--text-muted);
@@ -512,7 +520,7 @@ html_content = f"""<!DOCTYPE html>
                         <button id="generate-pw-btn" class="btn-action" style="flex: 1;">적응형 암호 생성</button>
                     </div>
                 </div>
-                <div class="field" style="margin-top: 18px;">
+                <div class="field" style="margin-top: 20px;">
                     <label>생성된 비밀번호:</label>
                     <input type="text" id="generated-password-display" class="pw-output" readonly>
                 </div>
@@ -595,7 +603,7 @@ html_content = f"""<!DOCTYPE html>
             <span class="section-desc">국내 트래픽 상위 50대 웹사이트 Playwright 전수 스캔 실측치</span>
         </div>
 
-        <input type="text" id="table-search-input" placeholder="도메인 또는 산업군(portal, banking, securities, fintech...) 필터링..." style="width: 100%; margin-bottom: 10px;">
+        <input type="text" id="table-search-input" placeholder="도메인 또는 산업군(portal, banking, securities, fintech...) 필터링..." style="width: 100%; margin-bottom: 12px;">
 
         <div class="table-wrap">
             <table class="flat-table">
@@ -998,4 +1006,4 @@ out_file = repo_root / "apps/web-playground/index.html"
 with open(out_file, "w", encoding="utf-8") as f:
     f.write(html_content)
 
-print(f"Playground index.html updated with complete Wasm import bridge! ({len(html_content)} bytes)")
+print(f"Playground index.html updated with 64px step-gap and monochrome neutral palette! ({len(html_content)} bytes)")
