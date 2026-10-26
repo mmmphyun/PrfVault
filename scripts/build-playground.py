@@ -457,6 +457,78 @@ html_content = f"""<!DOCTYPE html>
 
         .tbl-btn:hover {{ text-decoration: underline; }}
 
+        /* 수사 단위표 모달 & 헬프 버튼 */
+        .help-btn {{
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--accent);
+            font-size: 11px;
+            font-family: var(--mono);
+            padding: 2px 7px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }}
+        .help-btn:hover {{
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }}
+
+        .modal-overlay {{
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }}
+
+        .modal-overlay.active {{
+            opacity: 1;
+            pointer-events: auto;
+        }}
+
+        .modal-box {{
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }}
+
+        .modal-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }}
+
+        .modal-close-btn {{
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }}
+
+        .modal-close-btn:hover {{
+            color: var(--text-title);
+            border-color: var(--text-secondary);
+        }}
+
         footer.wb-footer {{
             margin-top: 64px;
             padding-top: 28px;
@@ -566,7 +638,10 @@ html_content = f"""<!DOCTYPE html>
                         <div class="stat-lbl">NIST 대비 결손율</div>
                     </div>
                     <div class="stat-item" style="flex: 1;">
-                        <div class="stat-num" id="current-crack-stat" style="font-size: 19px;">약 58조 9,104억 년</div>
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+                            <div class="stat-num" id="current-crack-stat" style="font-size: 16.5px;">약 58조 7,732억 년</div>
+                            <button type="button" id="open-unit-modal-btn" class="help-btn" onclick="openUnitModal()">수사 단위표 ?</button>
+                        </div>
                         <div class="stat-lbl">GPU 오프라인 크랙 예상 시간 (초당 100억 회 추정)</div>
                     </div>
                 </div>
@@ -643,6 +718,57 @@ html_content = f"""<!DOCTYPE html>
         <div>PrfVault Research · WebAuthn PRF &amp; Rust WebAssembly Local Vault</div>
         <div>No Server Communication · Zero Personal Data Collected</div>
     </footer>
+</div>
+
+<!-- 한국 전통 대수(大數) 단위표 모달 -->
+<div id="unit-modal" class="modal-overlay" onclick="handleBackdropClick(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div>
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-title); margin: 0;">한국 전통 대수(大數) 단위 및 암호 강도 비교표</h3>
+                <p style="font-size: 12.5px; color: var(--text-muted); margin: 4px 0 0 0;">전통 수사는 만(10⁴) 단위마다 확장되며, 암호학 키스페이스의 전수조사 소요 시간을 직관적으로 가늠할 수 있게 돕습니다.</p>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeUnitModal()">닫기 (ESC)</button>
+        </div>
+
+        <div style="margin-bottom: 18px; padding: 12px 14px; background: #141414; border-radius: 4px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+            <strong style="color: var(--accent);">우주의 나이:</strong> 약 <strong>1.38 × 10¹⁰ 년</strong> (138억 년)<br>
+            • <strong>네이버 16자 (104.87 bits):</strong> 약 58조 년 (우주 나이의 약 <strong>4,200배</strong>)<br>
+            • <strong>NIST 20자 (131.09 bits):</strong> 약 45해 년 (우주 나이의 약 <strong>330억 배</strong>)<br>
+            • <strong>디시 40자 (262.18 bits):</strong> 약 13나유타 년 (우주 나이의 약 <strong>9.6 × 10⁵⁰ 배</strong>)
+        </div>
+
+        <div style="max-height: 340px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 4px;">
+            <table class="flat-table" style="font-size: 13px;">
+                <thead>
+                    <tr>
+                        <th style="width: 90px;">수사 명칭</th>
+                        <th style="width: 110px;">공학 지수</th>
+                        <th>의미 및 암호학 보안 맥락</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>만 (萬)</strong></td><td>10⁴</td><td>1만</td></tr>
+                    <tr><td><strong>억 (億)</strong></td><td>10⁸</td><td>10,000만</td></tr>
+                    <tr style="background: rgba(56, 189, 248, 0.08);"><td><strong style="color: var(--accent);">조 (兆)</strong></td><td>10¹²</td><td><strong>네이버 16자</strong> 오프라인 전수 크랙 시간대 (약 58조 년)</td></tr>
+                    <tr><td><strong>경 (京)</strong></td><td>10¹⁶</td><td>10,000조</td></tr>
+                    <tr style="background: rgba(16, 185, 129, 0.08);"><td><strong style="color: var(--emerald);">해 (垓)</strong></td><td>10²⁰</td><td><strong>NIST SP 800-63B 20자</strong> 권고 암호 크랙 시간대 (약 45해 년)</td></tr>
+                    <tr><td><strong>자 (秭)</strong></td><td>10²⁴</td><td>10,000해</td></tr>
+                    <tr><td><strong>양 (穰)</strong></td><td>10²⁸</td><td>10,000자</td></tr>
+                    <tr><td><strong>구 (溝)</strong></td><td>10³²</td><td>10,000양</td></tr>
+                    <tr><td><strong>간 (澗)</strong></td><td>10³⁶</td><td>10,000구</td></tr>
+                    <tr><td><strong>정 (正)</strong></td><td>10⁴⁰</td><td>10,000간</td></tr>
+                    <tr><td><strong>재 (載)</strong></td><td>10⁴⁴</td><td>10,000정</td></tr>
+                    <tr><td><strong>극 (極)</strong></td><td>10⁴⁸</td><td>10,000재</td></tr>
+                    <tr><td><strong>항하사 (恒河沙)</strong></td><td>10⁵²</td><td>갠지스 강의 모래알 수처럼 셀 수 없이 많은 수</td></tr>
+                    <tr><td><strong>아승기 (阿僧祇)</strong></td><td>10⁵⁶</td><td>헤아릴 수 없는 무한의 시간 단위</td></tr>
+                    <tr style="background: rgba(56, 189, 248, 0.08);"><td><strong style="color: var(--accent);">나유타 (那由他)</strong></td><td>10⁶⁰</td><td><strong>디시인사이드 40자</strong> 고엔트로피 크랙 시간대 (약 13나유타 년)</td></tr>
+                    <tr><td><strong>불가사의 (不可思議)</strong></td><td>10⁶⁴</td><td>상식과 사유로는 헤아릴 수 없는 불가해한 수</td></tr>
+                    <tr><td><strong>무량대수 (無量大數)</strong></td><td>10⁶⁸</td><td>전통 한자 수사의 최대 수치</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -751,42 +877,117 @@ async function generateAdaptivePassword(masterSecret, domain, length) {{
     return picks.join('');
 }}
 
-function formatKoreanCrackTime(seconds) {{
-    if (!seconds || seconds <= 0) return '0초';
-    if (seconds < 1) return `${{(seconds * 1000).toFixed(1)}} 밀리초`;
-    if (seconds < 60) return `${{seconds.toFixed(1)}} 초`;
-    if (seconds < 3600) return `${{(seconds / 60).toFixed(1)}} 분`;
-    if (seconds < 86400) return `${{(seconds / 3600).toFixed(1)}} 시간`;
-    if (seconds < 31536000) return `${{(seconds / 86400).toFixed(1)}} 일`;
+function toSuperscript(num) {{
+    const map = {{ '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '-': '⁻' }};
+    return String(num).split('').map(c => map[c] || c).join('');
+}}
 
-    const years = seconds / 31536000;
-    if (years < 10000) {{
+function formatKoreanCrackTime(seconds, entropy) {{
+    if (!entropy || entropy <= 0) return '0초';
+
+    const LOG10_SEC_PER_YEAR = 7.4988065096;
+    const LOG10_RATE = 10;
+    const log10Years = (entropy - 1) * 0.3010299956639812 - (LOG10_RATE + LOG10_SEC_PER_YEAR);
+
+    if (log10Years < -7.4988) {{
+        const s = Math.pow(2, entropy - 1) / 1e10;
+        if (s < 0.001) return `${{(s * 1000).toFixed(2)}} 밀리초`;
+        return `${{s.toFixed(2)}} 초`;
+    }}
+    if (log10Years < 0) {{
+        const s = Math.pow(2, entropy - 1) / 1e10;
+        if (s < 60) return `${{s.toFixed(1)}} 초`;
+        if (s < 3600) return `${{(s / 60).toFixed(1)}} 분`;
+        if (s < 86400) return `${{(s / 3600).toFixed(1)}} 시간`;
+        return `${{(s / 86400).toFixed(1)}} 일`;
+    }}
+
+    if (log10Years < 4) {{
+        const years = Math.pow(10, log10Years);
         return `약 ${{Math.round(years).toLocaleString()}} 년`;
     }}
 
     const units = [
-        [1e28, '양'],
-        [1e24, '자'],
-        [1e20, '해'],
-        [1e16, '경'],
-        [1e12, '조'],
-        [1e8, '억'],
-        [1e4, '만']
+        {{ exp: 68, name: '무량대수' }},
+        {{ exp: 64, name: '불가사의' }},
+        {{ exp: 60, name: '나유타' }},
+        {{ exp: 56, name: '아승기' }},
+        {{ exp: 52, name: '항하사' }},
+        {{ exp: 48, name: '극' }},
+        {{ exp: 44, name: '재' }},
+        {{ exp: 40, name: '정' }},
+        {{ exp: 36, name: '간' }},
+        {{ exp: 32, name: '구' }},
+        {{ exp: 28, name: '양' }},
+        {{ exp: 24, name: '자' }},
+        {{ exp: 20, name: '해' }},
+        {{ exp: 16, name: '경' }},
+        {{ exp: 12, name: '조' }},
+        {{ exp: 8, name: '억' }},
+        {{ exp: 4, name: '만' }}
     ];
 
-    let rem = years;
-    const parts = [];
-    for (const [factor, name] of units) {{
-        if (rem >= factor) {{
-            const count = Math.floor(rem / factor);
-            rem = rem % factor;
-            parts.push(`${{count.toLocaleString()}}${{name}}`);
-            if (parts.length >= 2) break;
+    const expFloor = Math.floor(log10Years);
+    const mantissa = Math.pow(10, log10Years - expFloor);
+    const sciNotation = `${{mantissa.toFixed(2)}} × 10${{toSuperscript(expFloor)}} 년`;
+
+    if (log10Years >= 72) {{
+        return `약 ${{sciNotation}} (무량대수 초과)`;
+    }}
+
+    let primaryUnit = null;
+    let secondaryUnit = null;
+    for (let i = 0; i < units.length; i++) {{
+        if (log10Years >= units[i].exp) {{
+            primaryUnit = units[i];
+            if (i + 1 < units.length && units[i + 1].exp === units[i].exp - 4) {{
+                secondaryUnit = units[i + 1];
+            }}
+            break;
         }}
     }}
 
-    return `약 ${{parts.join(' ')}} 년`;
+    const parts = [];
+    if (primaryUnit) {{
+        const u1Val = Math.pow(10, log10Years - primaryUnit.exp);
+        const u1Count = Math.floor(u1Val);
+        parts.push(`${{u1Count.toLocaleString()}}${{primaryUnit.name}}`);
+
+        if (secondaryUnit) {{
+            const rem = u1Val - u1Count;
+            const u2Count = Math.round(rem * 10000);
+            if (u2Count > 0) {{
+                parts.push(`${{u2Count.toLocaleString()}}${{secondaryUnit.name}}`);
+            }}
+        }}
+    }}
+
+    const koreanStr = parts.join(' ');
+    if (log10Years >= 20) {{
+        return `약 ${{koreanStr}} 년 (${{sciNotation}})`;
+    }}
+    return `약 ${{koreanStr}} 년`;
 }}
+
+function openUnitModal() {{
+    const m = document.getElementById('unit-modal');
+    if (m) m.classList.add('active');
+}}
+
+function closeUnitModal() {{
+    const m = document.getElementById('unit-modal');
+    if (m) m.classList.remove('active');
+}}
+
+function handleBackdropClick(e) {{
+    if (e.target.id === 'unit-modal') {{
+        closeUnitModal();
+    }}
+}}
+
+window.addEventListener('keydown', (e) => {{
+    if (e.key === 'Escape') closeUnitModal();
+}});
 
 function lookupDomain(domainInput) {{
     if (!domainInput) return null;
@@ -837,8 +1038,8 @@ async function runGenerate() {{
 
     document.getElementById('current-entropy-bits').textContent = `${{entropy.toFixed(2)}} bits`;
     document.getElementById('current-loss-stat').textContent = `-${{loss.toFixed(1)}}%`;
-    document.getElementById('current-crack-stat').textContent = formatKoreanCrackTime(crackSec);
-    document.getElementById('nist-crack-stat').textContent = formatKoreanCrackTime(stdCrackSec);
+    document.getElementById('current-crack-stat').textContent = formatKoreanCrackTime(crackSec, entropy);
+    document.getElementById('nist-crack-stat').textContent = formatKoreanCrackTime(stdCrackSec, NIST_STD_ENTROPY);
 
     const maxBar = 200;
     document.getElementById('current-entropy-bar').style.width = `${{Math.min(100, (entropy / maxBar) * 100)}}%`;
