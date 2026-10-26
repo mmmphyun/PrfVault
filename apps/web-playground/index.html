@@ -3,2034 +3,946 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrfVault Web Playground - 비표준 인증 보안 인터페이스 방어 시뮬레이터</title>
+    <title>PrfVault Playground · 비표준 인증 보안 인터페이스 실증</title>
     <style>
         :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: #1e293b;
-            --border-color: #334155;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
+            --bg: #090b10;
+            --surface: #11141d;
+            --border: #1e2433;
+            --border-subtle: #161a26;
+            --text-title: #f8fafc;
+            --text-body: #cbd5e1;
             --text-muted: #64748b;
-            --accent-blue: #38bdf8;
-            --accent-blue-hover: #0ea5e9;
-            --accent-amber: #f59e0b;
-            --accent-emerald: #10b981;
-            --accent-rose: #f43f5e;
-            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            --accent: #38bdf8;
+            --accent-dim: rgba(56, 189, 248, 0.08);
+            --amber: #fbbf24;
+            --amber-dim: rgba(251, 191, 36, 0.08);
+            --emerald: #34d399;
+            --emerald-dim: rgba(52, 211, 153, 0.08);
+            --rose: #fb7185;
+            --rose-dim: rgba(251, 113, 133, 0.08);
+            --mono: "SF Mono", Monaco, Consolas, "Liberation Mono", Courier, monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
+            background-color: var(--bg);
+            color: var(--text-body);
+            font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
+            font-size: 14px;
             line-height: 1.6;
-            padding: 24px;
+            padding: 48px 24px;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .container {
-            max-width: 1200px;
+        .workbench {
+            max-width: 960px;
             margin: 0 auto;
         }
 
-        /* 헤더 영역 (BRB-C03 필수) */
-        header.app-header {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        /* 헤더: 카드 박스 배제, 단정한 아티클 타이포그래피 */
+        header.wb-header {
+            margin-bottom: 36px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        .paper-tag {
-            display: inline-block;
-            background-color: rgba(56, 189, 248, 0.15);
-            color: var(--accent-blue);
-            font-size: 13px;
+        .meta-eyebrow {
+            font-size: 11.5px;
             font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--accent);
             margin-bottom: 8px;
         }
 
-        .paper-title {
-            font-size: 20px;
+        h1.paper-heading {
+            font-size: 21px;
             font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 12px;
-            line-height: 1.4;
+            color: var(--text-title);
+            line-height: 1.35;
+            letter-spacing: -0.015em;
+            margin-bottom: 14px;
         }
 
-        .app-sentence-box {
-            background-color: rgba(15, 23, 42, 0.7);
-            border-left: 4px solid var(--accent-blue);
-            padding: 12px 18px;
-            border-radius: 4px;
+        .purpose-statement {
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.6;
+            padding-left: 14px;
+            border-left: 2px solid var(--accent);
         }
 
-        .app-sentence-label {
+        .wasm-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            font-family: var(--mono);
+            color: var(--text-muted);
+            margin-top: 14px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--emerald);
+        }
+
+        /* 섹션 공통: 카드 박스 전면 배제, 단정한 디바이더 */
+        .wb-section {
+            padding: 26px 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .wb-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 14px;
+        }
+
+        .section-label {
             font-size: 12px;
             font-weight: 600;
-            color: var(--accent-blue);
-            text-transform: uppercase;
-            margin-bottom: 4px;
+            color: var(--accent);
+            font-family: var(--mono);
+            letter-spacing: 0.05em;
         }
 
-        .app-sentence {
-            font-size: 15px;
-            font-weight: 500;
-            color: #e2e8f0;
-            line-height: 1.5;
+        .section-desc {
+            font-size: 12.5px;
+            color: var(--text-muted);
         }
 
-        /* 3단계 메인 그리드 */
-        .step-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 28px;
-        }
-
-        @media (max-width: 1024px) {
-            .step-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .step-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
+        /* 1단계: 칩 및 도메인 입력 */
+        .chip-group {
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
         }
 
-        .step-card.active-step {
-            border-color: var(--accent-blue);
-        }
-
-        .step-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-        }
-
-        .step-number {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--accent-blue);
-            background: rgba(56, 189, 248, 0.1);
-            padding: 2px 8px;
+        .chip-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #94a3b8;
+            font-size: 12px;
+            padding: 4px 10px;
             border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
         }
 
-        .step-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
+        .chip-btn:hover {
+            border-color: var(--accent);
+            color: #fff;
+            background: var(--accent-dim);
         }
 
-        /* 폼 요소 */
-        .form-group {
-            margin-bottom: 16px;
+        .chip-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
         }
 
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
+        .input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
 
         input[type="text"], input[type="password"], input[type="number"] {
-            width: 100%;
-            background-color: #0f172a;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: inherit;
-        }
-
-        input:focus {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: #f1f5f9;
+            font-size: 13.5px;
+            padding: 8px 12px;
+            border-radius: 4px;
             outline: none;
-            border-color: var(--accent-blue);
+            transition: border-color 0.15s;
         }
 
-        /* 버튼류 */
-        .btn {
-            display: inline-block;
-            width: 100%;
-            background-color: var(--accent-blue);
-            color: #0f172a;
-            font-size: 14px;
+        input:focus { border-color: var(--accent); }
+
+        .domain-input { flex: 1; }
+
+        .diag-feedback {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-left: 2px solid var(--border);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .diag-feedback.warning {
+            border-left-color: var(--amber);
+            background: var(--amber-dim);
+            color: #fef3c7;
+        }
+
+        .diag-feedback.danger {
+            border-left-color: var(--rose);
+            background: var(--rose-dim);
+            color: #ffe4e6;
+        }
+
+        .diag-feedback.success {
+            border-left-color: var(--emerald);
+            background: var(--emerald-dim);
+            color: #d1fae5;
+        }
+
+        /* 2단계: 적응형 암호 및 엔트로피 비교 */
+        .gen-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .gen-grid { grid-template-columns: 1fr; }
+        }
+
+        .field { margin-bottom: 12px; }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .btn-action {
+            background: var(--accent);
+            color: #090b10;
             font-weight: 600;
-            padding: 10px 16px;
-            border-radius: 6px;
+            font-size: 12.5px;
+            padding: 8px 14px;
             border: none;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.15s ease;
-            text-align: center;
+            transition: opacity 0.15s;
         }
 
-        .btn:hover:not(:disabled) {
-            background-color: var(--accent-blue-hover);
-        }
+        .btn-action:hover { opacity: 0.9; }
 
-        .btn:disabled {
-            background-color: #334155;
-            color: #64748b;
+        .btn-action:disabled {
+            background: var(--border);
+            color: var(--text-muted);
             cursor: not-allowed;
         }
 
         .btn-secondary {
-            background-color: #334155;
-            color: var(--text-primary);
-            margin-top: 8px;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background-color: #475569;
-        }
-
-        /* 칩 버튼 */
-        .preset-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 14px;
-        }
-
-        .preset-chip {
-            background-color: rgba(51, 65, 85, 0.6);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-body);
             font-size: 12px;
-            padding: 4px 8px;
+            padding: 7px 11px;
             border-radius: 4px;
             cursor: pointer;
+            margin-left: 6px;
         }
 
-        .preset-chip:hover {
-            border-color: var(--accent-blue);
-            color: var(--text-primary);
+        .btn-secondary:hover {
+            border-color: var(--text-muted);
+            color: #fff;
         }
 
-        /* 배지 */
-        .badge {
-            display: inline-block;
-            font-size: 11px;
+        .pw-output {
+            font-family: var(--mono);
+            color: var(--accent);
+            font-size: 13.5px;
             font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 4px;
+            width: 100%;
         }
 
-        .badge.danger {
-            background-color: rgba(244, 63, 94, 0.2);
-            color: var(--accent-rose);
-        }
+        .entropy-panel { padding-top: 4px; }
 
-        .badge.warning {
-            background-color: rgba(245, 158, 11, 0.2);
-            color: var(--accent-amber);
-        }
+        .bar-group { margin-bottom: 12px; }
 
-        .badge.success {
-            background-color: rgba(16, 185, 129, 0.2);
-            color: var(--accent-emerald);
-        }
-
-        /* 진단 요약 박스 */
-        .alert-box {
-            font-size: 13px;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 12px;
-            line-height: 1.5;
-        }
-
-        .alert-box.warning-alert {
-            background-color: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            color: #fde68a;
-        }
-
-        .alert-box.danger-alert {
-            background-color: rgba(244, 63, 94, 0.1);
-            border: 1px solid rgba(244, 63, 94, 0.3);
-            color: #fecdd3;
-        }
-
-        .alert-box.success-alert {
-            background-color: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #a7f3d0;
-        }
-
-        /* 엔트로피 비교 바 */
-        .entropy-compare {
-            background-color: #0f172a;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 12px;
-            margin: 12px 0;
-        }
-
-        .compare-row {
-            margin-bottom: 10px;
-        }
-
-        .compare-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .compare-meta {
+        .bar-head {
             display: flex;
             justify-content: space-between;
             font-size: 12px;
-            color: var(--text-secondary);
             margin-bottom: 4px;
         }
 
-        .bar-track {
-            background-color: #1e293b;
-            border-radius: 4px;
-            height: 10px;
+        .track {
+            height: 6px;
+            background: #181d2a;
+            border-radius: 2px;
             overflow: hidden;
         }
 
-        .bar-fill {
-            height: 100%;
-            transition: width 0.3s ease;
-        }
+        .fill { height: 100%; transition: width 0.3s; }
 
-        .crack-metrics {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-
-        .metric-box {
-            background-color: #0f172a;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-        }
-
-        .metric-label {
-            color: var(--text-muted);
-            margin-bottom: 2px;
-        }
-
-        .metric-value {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* 헥스 덤프 뷰어 */
-        .hex-viewer-container {
-            background-color: #090d16;
-            border: 1px solid #1e293b;
-            border-radius: 6px;
-            padding: 10px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-            margin: 10px 0;
-            overflow-x: auto;
-        }
-
-        .hex-row {
-            display: grid;
-            grid-template-columns: 80px 1fr 120px;
-            gap: 12px;
-            padding: 2px 0;
-        }
-
-        .hex-row.header-row {
-            color: var(--text-muted);
-            border-bottom: 1px solid #1e293b;
-            padding-bottom: 4px;
-            margin-bottom: 4px;
-        }
-
-        .hex-addr {
-            color: var(--accent-blue);
-        }
-
-        .hex-bytes.byte-active {
-            color: #38bdf8;
-        }
-
-        .hex-bytes.byte-zero {
-            color: #64748b;
-        }
-
-        .hex-ascii.byte-active {
-            color: #4ade80;
-        }
-
-        .hex-ascii.byte-zero {
-            color: #475569;
-        }
-
-        .status-badge {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .status-badge.allocated {
-            background-color: rgba(56, 189, 248, 0.2);
-            color: var(--accent-blue);
-        }
-
-        .status-badge.zeroized {
-            background-color: rgba(244, 63, 94, 0.2);
-            color: var(--accent-rose);
-        }
-
-        /* 모의 로그인 영역 */
-        .mock-login-box {
-            background-color: #0f172a;
-            border: 1px dashed var(--border-color);
-            border-radius: 6px;
-            padding: 12px;
+        .stats-pair {
+            display: flex;
+            gap: 24px;
             margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-subtle);
         }
 
-        .mock-result {
-            margin-top: 8px;
+        .stat-item .stat-num {
+            font-size: 15px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .stat-item .stat-lbl {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* 3단계: 유일하게 터미널 박스가 필요한 곳 */
+        .terminal-box {
+            background: #05070c;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 14px 16px;
+            font-family: var(--mono);
             font-size: 12px;
-            font-weight: 500;
+            margin-top: 10px;
         }
 
-        .mock-result.success {
-            color: var(--accent-emerald);
+        .terminal-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #141924;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-size: 11px;
         }
 
-        .mock-result.error {
-            color: var(--accent-rose);
+        .hex-dump {
+            max-height: 180px;
+            overflow-x: auto;
+            color: #94a3b8;
+            line-height: 1.6;
         }
 
-        /* 50대 벤치마크 테이블 */
-        .benchmark-section {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
+        .hex-line {
+            display: grid;
+            grid-template-columns: 85px 1fr 140px;
+            gap: 16px;
         }
 
-        .table-responsive {
-            max-height: 380px;
+        .addr { color: var(--text-muted); }
+        .bytes.active { color: var(--accent); }
+        .bytes.zero { color: #334155; }
+        .ascii.active { color: #86efac; }
+        .ascii.zero { color: #1e293b; }
+
+        .terminal-ctrl {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .timer-info {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--amber);
+        }
+
+        .mock-login-inline {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            align-items: center;
+        }
+
+        /* 하단 50대 실측 플랫 테이블 */
+        .table-wrap {
+            max-height: 320px;
             overflow-y: auto;
             margin-top: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-top: 1px solid var(--border-subtle);
         }
 
-        table {
+        table.flat-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12.5px;
             text-align: left;
         }
 
-        th {
-            background-color: #0f172a;
-            color: var(--text-secondary);
-            font-weight: 600;
-            padding: 10px 12px;
+        table.flat-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11.5px;
             position: sticky;
             top: 0;
-            border-bottom: 1px solid var(--border-color);
+            background: var(--bg);
         }
 
-        td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #1e293b;
+        table.flat-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: #94a3b8;
         }
 
-        tr:hover td {
-            background-color: rgba(51, 65, 85, 0.3);
+        table.flat-table tr:hover td {
+            background: var(--surface);
+            color: #f1f5f9;
         }
 
-        .domain-select-btn {
+        .tbl-btn {
             background: none;
             border: none;
-            color: var(--accent-blue);
+            color: var(--accent);
             cursor: pointer;
             font-family: inherit;
-            font-size: 13px;
+            font-size: 12.5px;
+            font-weight: 500;
             padding: 0;
-            text-align: left;
         }
 
-        .domain-select-btn:hover {
-            text-decoration: underline;
-        }
+        .tbl-btn:hover { text-decoration: underline; }
 
-        .text-amber { color: var(--accent-amber); }
-        .text-gray { color: var(--text-muted); }
-        .font-bold { font-weight: 700; }
-
-        footer {
-            text-align: center;
+        footer.wb-footer {
+            margin-top: 48px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-subtle);
             font-size: 12px;
             color: var(--text-muted);
-            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- 헤더: 논문 제목 및 앱 한 문장 (통과 기준 BRB-C03 영구 고정) -->
-    <header class="app-header">
-        <div class="paper-tag">논문 실측 반영 애플리케이션 (과제 BR-B)</div>
-        <h1 class="paper-title">국내 50대 웹사이트의 비표준 인증 보안 인터페이스가 브라우저 패스워드 매니저 및 암호 엔트로피에 미치는 영향 실증</h1>
-        <div class="app-sentence-box">
-            <div class="app-sentence-label">누구를 어떻게 돕는가 (앱 한 문장)</div>
-            <p class="app-sentence">
-                "국내 웹 서비스를 이용하는 사용자가 네이버·KT의 16자 제한이나 금융권 가상 키패드 등 비표준 보안 인터페이스를 마주할 때, 본 앱이 사이트 제약을 자동 진단하여 94개 복합 문자군 기반 적응형 고엔트로피 비밀번호를 생성하고 가상 키패드용 1회용 마스킹 복사 및 Wasm 메모리 소거(Zeroize)로 계정을 보호해 준다."
-            </p>
+<div class="workbench">
+    <header class="wb-header">
+        <div class="meta-eyebrow">PrfVault Research Playground · 과제 BR-B</div>
+        <h1 class="paper-heading">국내 50대 웹사이트의 비표준 인증 보안 인터페이스가 브라우저 패스워드 매니저 및 암호 엔트로피에 미치는 영향 실증</h1>
+        <p class="purpose-statement">
+            "국내 웹 서비스를 이용하는 사용자가 네이버·KT의 16자 제한이나 금융권 가상 키패드 등 비표준 보안 인터페이스를 마주할 때, 본 앱이 사이트 제약을 자동 진단하여 94개 복합 문자군 기반 적응형 고엔트로피 비밀번호를 생성하고 가상 키패드용 1회용 마스킹 복사 및 Wasm 메모리 소거(Zeroize)로 계정을 보호해 준다."
+        </p>
+        <div class="wasm-pill">
+            <span class="status-dot"></span>
+            <span id="wasm-runtime-note">Rust Wasm Linear Memory (64KB ArrayBuffer) 직독 활성화</span>
         </div>
-        <div id="wasm-engine-status" style="margin-top: 12px;"></div>
     </header>
 
-    <!-- 메인 3단계 인터랙션 그리드 (통과 기준 BRB-C02, BRB-C05) -->
-    <div class="step-grid">
-        <!-- 1단계: 도메인 제약 진단 -->
-        <section class="step-card active-step">
-            <div class="step-header">
-                <span class="step-title">1단계: 도메인 제약 진단</span>
-                <span class="step-number">STEP 1</span>
-            </div>
+    <!-- 1단계: 도메인 제약 진단 -->
+    <section class="wb-section">
+        <div class="wb-section-header">
+            <span class="section-label">01 / DIAGNOSIS</span>
+            <span class="section-desc">국내 50대 웹사이트 로그인 DOM 비표준 제약조건 실측 분석</span>
+        </div>
 
-            <div class="form-group">
-                <label>국내 50대 실측 사이트 빠른 선택:</label>
-                <div class="preset-chips">
-                    <button class="preset-chip" data-domain="naver.com">네이버 (16자 제한)</button>
-                    <button class="preset-chip" data-domain="kt.com">KT (16자 제한)</button>
-                    <button class="preset-chip" data-domain="samsungpop.com">삼성증권 (키패드)</button>
-                    <button class="preset-chip" data-domain="hyundaicard.com">현대카드 (키패드)</button>
-                    <button class="preset-chip" data-domain="daum.net">다음 (32자 표준)</button>
-                    <button class="preset-chip" data-domain="dcinside.com">디시 (40자 고엔트로피)</button>
-                </div>
-            </div>
+        <div class="chip-group">
+            <button class="chip-btn active" data-domain="naver.com">네이버 (16자 제한)</button>
+            <button class="chip-btn" data-domain="kt.com">KT (16자 제한)</button>
+            <button class="chip-btn" data-domain="samsungpop.com">삼성증권 (키패드 차단)</button>
+            <button class="chip-btn" data-domain="hyundaicard.com">현대카드 (키패드 차단)</button>
+            <button class="chip-btn" data-domain="daum.net">다음 (32자 표준)</button>
+            <button class="chip-btn" data-domain="dcinside.com">디시 (40자 고엔트로피)</button>
+        </div>
 
-            <div class="form-group">
-                <label for="target-domain-input">대상 도메인 직접 입력:</label>
-                <input type="text" id="target-domain-input" value="naver.com" placeholder="도메인을 입력하십시오 (예: naver.com)">
-            </div>
-
-            <div style="font-size: 13px; margin-top: 4px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color: var(--text-secondary);">선택 도메인:</span>
-                    <strong id="diag-domain-name">naver.com</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color: var(--text-secondary);">카테고리:</span>
-                    <span id="diag-category">portal</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color: var(--text-secondary);">허용 최대 길이 (L):</span>
-                    <strong id="diag-maxlen">16자</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color: var(--text-secondary);">가상 키패드 여부:</span>
-                    <span id="diag-keypad">허용 (표준 DOM)</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--text-secondary);">NIST 대비 손실률:</span>
-                    <span id="diag-loss">-20.0% 결손</span>
-                </div>
-            </div>
-
-            <div id="diag-alert-box" class="alert-box warning-alert"></div>
-        </section>
-
-        <!-- 2단계: 적응형 고엔트로피 생성 & 비교 -->
-        <section class="step-card">
-            <div class="step-header">
-                <span class="step-title">2단계: 적응형 고엔트로피 생성</span>
-                <span class="step-number">STEP 2</span>
-            </div>
-
-            <div class="form-group">
-                <label for="master-secret-input">마스터 시크릿 (시드):</label>
-                <input type="password" id="master-secret-input" value="MyMasterSecret2026!#" placeholder="마스터 비밀값 입력">
-            </div>
-
-            <div class="form-group">
-                <label for="gen-length-input">사이트 허용 상한 길이 (자동 반영):</label>
-                <input type="number" id="gen-length-input" value="16" min="8" max="64">
-            </div>
-
-            <button id="generate-pw-btn" class="btn">적응형 고엔트로피 암호 생성</button>
-
-            <div class="form-group" style="margin-top: 14px;">
-                <label>생성된 적응형 비밀번호:</label>
-                <input type="text" id="generated-password-display" readonly style="font-family: var(--font-mono); font-weight: 600; color: #38bdf8;">
-            </div>
-
-            <!-- 실시간 엔트로피 비교 그래프 -->
-            <div class="entropy-compare">
-                <div class="compare-row">
-                    <div class="compare-meta">
-                        <span>현재 생성 엔트로피 (L=<span id="current-len-val">16</span>)</span>
-                        <strong id="current-entropy-bits">104.87 bits</strong>
-                    </div>
-                    <div class="bar-track">
-                        <div id="current-entropy-bar" class="bar-fill" style="width: 52%; background-color: #f59e0b;"></div>
-                    </div>
-                </div>
-                <div class="compare-row">
-                    <div class="compare-meta">
-                        <span>NIST SP 800-63B 표준 권고치 (L=20)</span>
-                        <strong id="nist-entropy-bits">131.09 bits</strong>
-                    </div>
-                    <div class="bar-track">
-                        <div id="nist-entropy-bar" class="bar-fill" style="width: 65%; background-color: #10b981;"></div>
-                    </div>
-                </div>
-
-                <div class="crack-metrics">
-                    <div class="metric-box">
-                        <div class="metric-label">엔트로피 손실률</div>
-                        <div id="current-entropy-loss" class="metric-value text-amber">20.0%</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-label">예상 크랙 시간 (GPU)</div>
-                        <div id="current-crack-time" class="metric-value">5.89e+13 년</div>
-                    </div>
-                </div>
-                <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
-                    * NIST 표준치($131.09\text{ bits}$) 대비 크랙 시간: <span id="nist-crack-time">4.59e+21 년</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- 3단계: 가상 키패드 대응 & Wasm Zeroize 시연 -->
-        <section class="step-card">
-            <div class="step-header">
-                <span class="step-title">3단계: 비표준 대응 & Zeroize</span>
-                <span class="step-number">STEP 3</span>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span id="mem-status-tag" class="status-badge allocated">Wasm Memory Active</span>
-                <span id="zeroize-timer-tag" style="font-size: 12px; color: var(--accent-amber); font-weight: 600;">메모리 상주 중</span>
-            </div>
-
-            <!-- 실시간 Wasm 선형 메모리 헥스 덤프 -->
-            <div class="hex-viewer-container" id="wasm-hex-dump"></div>
-
-            <button id="copy-mask-btn" class="btn">1회용 마스킹 복사 & 5초 Zeroize 시작</button>
-            <button id="force-zeroize-btn" class="btn btn-secondary">즉시 Wasm 물리 소거(Zeroize)</button>
-
-            <!-- 모의 로그인 테스트 폼 -->
-            <div class="mock-login-box">
-                <form id="mock-login-form">
-                    <label for="mock-password-input">가상 로그인 폼 테스트 (클립보드 붙여넣기):</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="password" id="mock-password-input" placeholder="Ctrl+V 로 붙여넣기">
-                        <button type="submit" class="btn" style="width: 80px; padding: 0;">제출</button>
-                    </div>
-                    <div id="mock-login-result" class="mock-result"></div>
-                </form>
-            </div>
-        </section>
-    </div>
-
-    <!-- 하단: 국내 50대 웹사이트 실측 벤치마크 전수 데이터표 -->
-    <section class="benchmark-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <div>
-                <h2 style="font-size: 18px; font-weight: 700;">국내 50대 웹사이트 인증 보안 인터페이스 전수 실측표</h2>
-                <p style="font-size: 13px; color: var(--text-secondary);">
-                    Playwright 헤드리스 브라우저 전수 스캔 실측치 (2026-09-28 데이터). 사이트를 클릭하면 1단계로 즉시 로드됩니다.
-                </p>
-            </div>
-            <div style="width: 260px;">
-                <input type="text" id="benchmark-search" placeholder="도메인 또는 카테고리 검색...">
+        <div class="input-row">
+            <input type="text" id="target-domain-input" class="domain-input" value="naver.com" placeholder="도메인을 입력하거나 위 목록을 클릭하십시오">
+            <div style="font-family: var(--mono); font-size: 12px; color: var(--text-muted);" id="domain-quick-metric">
+                L=16 · 104.87 bits · 키패드 없음
             </div>
         </div>
 
-        <div class="table-responsive">
-            <table>
+        <div id="diag-feedback-box" class="diag-feedback warning">
+            <strong>네이버 (naver.com) 비표준 제약 감지:</strong><br>
+            최대 길이가 16자로 제한되어 있어 NIST SP 800-63B 기준(20자, 131.09 bits) 대비 <strong>정확히 20.0%의 엔트로피 결손</strong>이 발생합니다.
+        </div>
+    </section>
+
+    <!-- 2단계: 적응형 고엔트로피 생성 및 엔트로피 비교 -->
+    <section class="wb-section">
+        <div class="wb-section-header">
+            <span class="section-label">02 / ADAPTIVE KEY DERIVATION</span>
+            <span class="section-desc">사이트 제약에 맞춘 94자 복합 문자군 전수 매핑 및 실시간 엔트로피 비교</span>
+        </div>
+
+        <div class="gen-grid">
+            <div>
+                <div class="field">
+                    <label>마스터 시크릿 (시드):</label>
+                    <input type="password" id="master-secret-input" value="MasterPassword2026!#" style="width: 100%;">
+                </div>
+                <div class="field">
+                    <label>사이트 상한 길이 (자동 반영):</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" id="gen-length-input" value="16" min="8" max="64" style="width: 80px;">
+                        <button id="generate-pw-btn" class="btn-action" style="flex: 1;">적응형 암호 생성</button>
+                    </div>
+                </div>
+                <div class="field" style="margin-top: 14px;">
+                    <label>생성된 비밀번호:</label>
+                    <input type="text" id="generated-password-display" class="pw-output" readonly>
+                </div>
+            </div>
+
+            <div class="entropy-panel">
+                <div class="bar-group">
+                    <div class="bar-head">
+                        <span>현재 암호 엔트로피 (<span id="len-label">16</span>자)</span>
+                        <strong id="current-entropy-bits" style="color: var(--amber);">104.87 bits</strong>
+                    </div>
+                    <div class="track">
+                        <div id="current-entropy-bar" class="fill" style="width: 52%; background: var(--amber);"></div>
+                    </div>
+                </div>
+
+                <div class="bar-group">
+                    <div class="bar-head">
+                        <span>NIST SP 800-63B 권고치 (20자)</span>
+                        <strong id="nist-entropy-bits" style="color: var(--emerald);">131.09 bits</strong>
+                    </div>
+                    <div class="track">
+                        <div id="nist-entropy-bar" class="fill" style="width: 65%; background: var(--emerald);"></div>
+                    </div>
+                </div>
+
+                <div class="stats-pair">
+                    <div class="stat-item">
+                        <div class="stat-num" id="current-loss-stat" style="color: var(--rose);">-20.0%</div>
+                        <div class="stat-lbl">NIST 대비 결손율</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num" id="current-crack-stat">5.89e+13 년</div>
+                        <div class="stat-lbl">GPU 오프라인 크랙 시간</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3단계: 가상 키패드 대응 & WebAssembly 선형 메모리 물리 소거 (단독 콘솔 박스) -->
+    <section class="wb-section">
+        <div class="wb-section-header">
+            <span class="section-label">03 / MEMORY ZEROIZATION</span>
+            <span class="section-desc">WebAssembly Linear Memory (ArrayBuffer) 내 평문 상주 확인 및 0x00 소거</span>
+        </div>
+
+        <div class="terminal-box">
+            <div class="terminal-bar">
+                <div>
+                    <span>TARGET BUFFER: </span>
+                    <span id="mem-ptr-info" style="color: #fff;">0x1000 (Allocated)</span>
+                </div>
+                <div id="mem-status-pill" style="color: var(--emerald);">STATUS: ACTIVE IN WASM MEMORY</div>
+            </div>
+
+            <div class="hex-dump" id="wasm-hex-dump"></div>
+
+            <div class="terminal-ctrl">
+                <div>
+                    <button id="copy-mask-btn" class="btn-action">1회용 마스킹 복사 &amp; 5초 Zeroize</button>
+                    <button id="force-zeroize-btn" class="btn-secondary">즉시 소거</button>
+                </div>
+                <div class="timer-info" id="timer-display">대기 중 (복사 시 카운트다운 시작)</div>
+            </div>
+        </div>
+
+        <div class="mock-login-inline">
+            <span style="font-size: 12px; color: var(--text-muted);">가상 로그인 검증:</span>
+            <input type="password" id="mock-login-input" placeholder="Ctrl+V 로 붙여넣기" style="flex: 1; max-width: 240px; font-size: 12px; padding: 5px 8px;">
+            <button id="mock-submit-btn" class="btn-secondary">제출 확인</button>
+            <span id="mock-login-msg" style="font-size: 12px;"></span>
+        </div>
+    </section>
+
+    <!-- 하단 50대 사이트 실측 전수 데이터 (플랫 테이블) -->
+    <section class="wb-section" style="border-bottom: none;">
+        <div class="wb-section-header">
+            <span class="section-label">BENCHMARK DATASET</span>
+            <span class="section-desc">국내 트래픽 상위 50대 웹사이트 Playwright 전수 스캔 실측치</span>
+        </div>
+
+        <input type="text" id="table-search-input" placeholder="도메인 또는 산업군(portal, banking, securities, fintech...) 필터링..." style="width: 100%; margin-bottom: 8px;">
+
+        <div class="table-wrap">
+            <table class="flat-table">
                 <thead>
                     <tr>
-                        <th style="width: 40px;">No</th>
-                        <th>도메인 (Domain)</th>
+                        <th style="width: 36px;">#</th>
+                        <th>도메인</th>
                         <th>카테고리</th>
-                        <th>최대 길이 (L)</th>
-                        <th>정보 엔트로피 (bits)</th>
-                        <th>엔트로피 손실률</th>
-                        <th>자동완성 차단 여부</th>
+                        <th>최대 길이</th>
+                        <th>엔트로피</th>
+                        <th>손실률</th>
+                        <th>가상 키패드 차단</th>
                     </tr>
                 </thead>
-                <tbody id="benchmark-tbody"></tbody>
+                <tbody id="benchmark-table-body"></tbody>
             </table>
         </div>
     </section>
 
-    <footer>
-        <p>PrfVault Web Playground &copy; 2026 mmmphyun. W3C WebAuthn PRF &amp; Rust WebAssembly Adaptive Local Vault.</p>
-        <p style="margin-top: 4px; color: var(--text-muted);">본 웹 앱은 외부 서버 통신 및 개인정보 수집 없이 전 과정이 클라이언트 브라우저에서 독립 실행됩니다.</p>
+    <footer class="wb-footer">
+        <div>PrfVault Research · WebAuthn PRF &amp; Rust WebAssembly Local Vault</div>
+        <div>No Server Communication · Zero Personal Data Collected</div>
     </footer>
 </div>
 
 <script>
-// --- [1] BENCHMARK DATA ---
-// PrfVault 50대 웹사이트 실측 벤치마크 데이터셋
-// 출처: scripts/results/benchmark-analysis.json (2026-09-28 전수 스캔 실측치)
-const BENCHMARK_DATA = {
-  "totalScanned": 50,
-  "mfaEnforcedCount": 30,
-  "singleFactorCount": 20,
-  "overallBlockingRate": 4,
-  "overallSecurityModuleRate": 4,
-  "overallAverageEntropyBits": 134.24,
-  "overallAverageEntropyLoss": 0.8,
-  "categoryStats": {
-    "portal": {
-      "category": "portal",
-      "count": 5,
-      "averageMaxPasswordLength": 21.6,
-      "averageEntropyBits": 141.58,
-      "averageEntropyLossPercent": 4,
-      "virtualKeypadCount": 0,
-      "blockingRate": 0,
-      "securityModuleCount": 0,
-      "securityModuleRate": 0
-    },
-    "community": {
-      "category": "community",
-      "count": 5,
-      "averageMaxPasswordLength": 24,
-      "averageEntropyBits": 157.31,
-      "averageEntropyLossPercent": 0,
-      "virtualKeypadCount": 0,
-      "blockingRate": 0,
-      "securityModuleCount": 0,
-      "securityModuleRate": 0
-    },
-    "banking": {
-      "category": "banking",
-      "count": 8,
-      "averageMaxPasswordLength": 20,
-      "averageEntropyBits": 131.09,
-      "averageEntropyLossPercent": 0,
-      "virtualKeypadCount": 0,
-      "blockingRate": 0,
-      "securityModuleCount": 0,
-      "securityModuleRate": 0
-    },
-    "securities": {
-      "category": "securities",
-      "count": 6,
-      "averageMaxPasswordLength": 20,
-      "averageEntropyBits": 131.09,
-      "averageEntropyLossPercent": 0,
-      "virtualKeypadCount": 1,
-      "blockingRate": 16.7,
-      "securityModuleCount": 1,
-      "securityModuleRate": 16.7
-    },
-    "public": {
-      "category": "public",
-      "count": 8,
-      "averageMaxPasswordLength": 20,
-      "averageEntropyBits": 131.09,
-      "averageEntropyLossPercent": 0,
-      "virtualKeypadCount": 0,
-      "blockingRate": 0,
-      "securityModuleCount": 0,
-      "securityModuleRate": 0
-    },
-    "ecommerce": {
-      "category": "ecommerce",
-      "count": 10,
-      "averageMaxPasswordLength": 20,
-      "averageEntropyBits": 131.09,
-      "averageEntropyLossPercent": 0,
-      "virtualKeypadCount": 0,
-      "blockingRate": 0,
-      "securityModuleCount": 0,
-      "securityModuleRate": 0
-    },
-    "fintech": {
-      "category": "fintech",
-      "count": 5,
-      "averageMaxPasswordLength": 20,
-      "averageEntropyBits": 131.09,
-      "averageEntropyLossPercent": 0,
-      "virtualKeypadCount": 1,
-      "blockingRate": 20,
-      "securityModuleCount": 1,
-      "securityModuleRate": 20
-    },
-    "telecom": {
-      "category": "telecom",
-      "count": 3,
-      "averageMaxPasswordLength": 18.7,
-      "averageEntropyBits": 122.35,
-      "averageEntropyLossPercent": 6.67,
-      "virtualKeypadCount": 0,
-      "blockingRate": 0,
-      "securityModuleCount": 0,
-      "securityModuleRate": 0
-    }
-  },
-  "contrastAnalysis": {
-    "mfaGroup": {
-      "count": 30,
-      "averageMaxPasswordLength": 19.9,
-      "averageEntropyBits": 130.22,
-      "averageEntropyLossPercent": 0.67,
-      "virtualKeypadCount": 2,
-      "blockingRate": 6.7,
-      "securityModuleCount": 2,
-      "securityModuleRate": 6.7,
-      "estimatedCrackTimeSeconds": 7.915e+28
-    },
-    "singleFactorGroup": {
-      "count": 20,
-      "averageMaxPasswordLength": 21.4,
-      "averageEntropyBits": 140.27,
-      "averageEntropyLossPercent": 1,
-      "virtualKeypadCount": 0,
-      "blockingRate": 0,
-      "securityModuleCount": 0,
-      "securityModuleRate": 0,
-      "estimatedCrackTimeSeconds": 8.3929e+31
-    }
-  },
-  "entropyLossSummary": {
-    "maxLossSite": "naver.com",
-    "maxLossDomain": "naver.com",
-    "maxLossPercent": 20,
-    "averageEntropyLoss": 0.8
-  },
-  "siteDetails": [
-    {
-      "domain": "naver.com",
-      "category": "portal",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 16,
-      "charsetSize": 94,
-      "entropyBits": 104.8734,
-      "entropyLossPercent": 20,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.8578e+21,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "kakao.com",
-      "category": "portal",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "daum.net",
-      "category": "portal",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 32,
-      "charsetSize": 94,
-      "entropyBits": 209.7468,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 6.9032e+52,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "google.co.kr",
-      "category": "portal",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "nate.com",
-      "category": "portal",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "dcinside.com",
-      "category": "community",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 40,
-      "charsetSize": 94,
-      "entropyBits": 262.1836,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 4.2082e+68,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "bobaedream.co.kr",
-      "category": "community",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "ppomppu.co.kr",
-      "category": "community",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "inven.co.kr",
-      "category": "community",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "clien.net",
-      "category": "community",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "kbstar.com",
-      "category": "banking",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "shinhan.com",
-      "category": "banking",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "wooribank.com",
-      "category": "banking",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "kebhana.com",
-      "category": "banking",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "banking.nonghyup.com",
-      "category": "banking",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "ibk.co.kr",
-      "category": "banking",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "kakaobank.com",
-      "category": "banking",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "kbanknow.com",
-      "category": "banking",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "kiwoom.com",
-      "category": "securities",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "securities.miraeasset.com",
-      "category": "securities",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "samsungpop.com",
-      "category": "securities",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": true,
-      "hasE2EModule": true,
-      "securityModules": [
-        "VirtualKeypad"
-      ],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "truefriend.com",
-      "category": "securities",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "nhqv.com",
-      "category": "securities",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "kbsec.com",
-      "category": "securities",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "gov.kr",
-      "category": "public",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "hometax.go.kr",
-      "category": "public",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "nhis.or.kr",
-      "category": "public",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "nps.or.kr",
-      "category": "public",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "iros.go.kr",
-      "category": "public",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "efine.go.kr",
-      "category": "public",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "wetax.go.kr",
-      "category": "public",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "bokjiro.go.kr",
-      "category": "public",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "coupang.com",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "11st.co.kr",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "gmarket.co.kr",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "auction.co.kr",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "ssg.com",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "lotteon.com",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "kurly.com",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "musinsa.com",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "baemin.com",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "aladin.co.kr",
-      "category": "ecommerce",
-      "hasMfaEnforced": false,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "toss.im",
-      "category": "fintech",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "shinhancard.com",
-      "category": "fintech",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "samsungcard.com",
-      "category": "fintech",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "hyundaicard.com",
-      "category": "fintech",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": true,
-      "hasE2EModule": true,
-      "securityModules": [
-        "VirtualKeypad"
-      ],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "MEDIUM"
-    },
-    {
-      "domain": "card.kbstar.com",
-      "category": "fintech",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "tworld.co.kr",
-      "category": "telecom",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "kt.com",
-      "category": "telecom",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 16,
-      "charsetSize": 94,
-      "entropyBits": 104.8734,
-      "entropyLossPercent": 20,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.8578e+21,
-      "riskLevel": "LOW"
-    },
-    {
-      "domain": "lguplus.com",
-      "category": "telecom",
-      "hasMfaEnforced": true,
-      "maxPasswordLength": 20,
-      "charsetSize": 94,
-      "entropyBits": 131.0918,
-      "entropyLossPercent": 0,
-      "blockedByVirtualKeypad": false,
-      "hasE2EModule": false,
-      "securityModules": [],
-      "estimatedCrackTimeSeconds": 1.4506e+29,
-      "riskLevel": "LOW"
-    }
-  ],
-  "generatedAt": "2026-09-28T07:44:29.699Z"
-};
+// [1] BENCHMARK DATASET
+const BENCHMARK_DATA = {"totalScanned": 50, "mfaEnforcedCount": 30, "singleFactorCount": 20, "overallBlockingRate": 4, "overallSecurityModuleRate": 4, "overallAverageEntropyBits": 134.24, "overallAverageEntropyLoss": 0.8, "categoryStats": {"portal": {"category": "portal", "count": 5, "averageMaxPasswordLength": 21.6, "averageEntropyBits": 141.58, "averageEntropyLossPercent": 4, "virtualKeypadCount": 0, "blockingRate": 0, "securityModuleCount": 0, "securityModuleRate": 0}, "community": {"category": "community", "count": 5, "averageMaxPasswordLength": 24, "averageEntropyBits": 157.31, "averageEntropyLossPercent": 0, "virtualKeypadCount": 0, "blockingRate": 0, "securityModuleCount": 0, "securityModuleRate": 0}, "banking": {"category": "banking", "count": 8, "averageMaxPasswordLength": 20, "averageEntropyBits": 131.09, "averageEntropyLossPercent": 0, "virtualKeypadCount": 0, "blockingRate": 0, "securityModuleCount": 0, "securityModuleRate": 0}, "securities": {"category": "securities", "count": 6, "averageMaxPasswordLength": 20, "averageEntropyBits": 131.09, "averageEntropyLossPercent": 0, "virtualKeypadCount": 1, "blockingRate": 16.7, "securityModuleCount": 1, "securityModuleRate": 16.7}, "public": {"category": "public", "count": 8, "averageMaxPasswordLength": 20, "averageEntropyBits": 131.09, "averageEntropyLossPercent": 0, "virtualKeypadCount": 0, "blockingRate": 0, "securityModuleCount": 0, "securityModuleRate": 0}, "ecommerce": {"category": "ecommerce", "count": 10, "averageMaxPasswordLength": 20, "averageEntropyBits": 131.09, "averageEntropyLossPercent": 0, "virtualKeypadCount": 0, "blockingRate": 0, "securityModuleCount": 0, "securityModuleRate": 0}, "fintech": {"category": "fintech", "count": 5, "averageMaxPasswordLength": 20, "averageEntropyBits": 131.09, "averageEntropyLossPercent": 0, "virtualKeypadCount": 1, "blockingRate": 20, "securityModuleCount": 1, "securityModuleRate": 20}, "telecom": {"category": "telecom", "count": 3, "averageMaxPasswordLength": 18.7, "averageEntropyBits": 122.35, "averageEntropyLossPercent": 6.67, "virtualKeypadCount": 0, "blockingRate": 0, "securityModuleCount": 0, "securityModuleRate": 0}}, "contrastAnalysis": {"mfaGroup": {"count": 30, "averageMaxPasswordLength": 19.9, "averageEntropyBits": 130.22, "averageEntropyLossPercent": 0.67, "virtualKeypadCount": 2, "blockingRate": 6.7, "securityModuleCount": 2, "securityModuleRate": 6.7, "estimatedCrackTimeSeconds": 7.915e+28}, "singleFactorGroup": {"count": 20, "averageMaxPasswordLength": 21.4, "averageEntropyBits": 140.27, "averageEntropyLossPercent": 1, "virtualKeypadCount": 0, "blockingRate": 0, "securityModuleCount": 0, "securityModuleRate": 0, "estimatedCrackTimeSeconds": 8.3929e+31}}, "entropyLossSummary": {"maxLossSite": "naver.com", "maxLossDomain": "naver.com", "maxLossPercent": 20, "averageEntropyLoss": 0.8}, "siteDetails": [{"domain": "naver.com", "category": "portal", "hasMfaEnforced": false, "maxPasswordLength": 16, "charsetSize": 94, "entropyBits": 104.8734, "entropyLossPercent": 20, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.8578e+21, "riskLevel": "MEDIUM"}, {"domain": "kakao.com", "category": "portal", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "daum.net", "category": "portal", "hasMfaEnforced": false, "maxPasswordLength": 32, "charsetSize": 94, "entropyBits": 209.7468, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 6.9032e+52, "riskLevel": "MEDIUM"}, {"domain": "google.co.kr", "category": "portal", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "nate.com", "category": "portal", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "dcinside.com", "category": "community", "hasMfaEnforced": false, "maxPasswordLength": 40, "charsetSize": 94, "entropyBits": 262.1836, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 4.2082e+68, "riskLevel": "MEDIUM"}, {"domain": "bobaedream.co.kr", "category": "community", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "ppomppu.co.kr", "category": "community", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "inven.co.kr", "category": "community", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "clien.net", "category": "community", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "kbstar.com", "category": "banking", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "shinhan.com", "category": "banking", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "wooribank.com", "category": "banking", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "kebhana.com", "category": "banking", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "banking.nonghyup.com", "category": "banking", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "ibk.co.kr", "category": "banking", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "kakaobank.com", "category": "banking", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "kbanknow.com", "category": "banking", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "kiwoom.com", "category": "securities", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "securities.miraeasset.com", "category": "securities", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "samsungpop.com", "category": "securities", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": true, "hasE2EModule": true, "securityModules": ["VirtualKeypad"], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "truefriend.com", "category": "securities", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "nhqv.com", "category": "securities", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "kbsec.com", "category": "securities", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "gov.kr", "category": "public", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "hometax.go.kr", "category": "public", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "nhis.or.kr", "category": "public", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "nps.or.kr", "category": "public", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "iros.go.kr", "category": "public", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "efine.go.kr", "category": "public", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "wetax.go.kr", "category": "public", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "bokjiro.go.kr", "category": "public", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "coupang.com", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "11st.co.kr", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "gmarket.co.kr", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "auction.co.kr", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "ssg.com", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "lotteon.com", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "kurly.com", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "musinsa.com", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "baemin.com", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "aladin.co.kr", "category": "ecommerce", "hasMfaEnforced": false, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "toss.im", "category": "fintech", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "shinhancard.com", "category": "fintech", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "samsungcard.com", "category": "fintech", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "hyundaicard.com", "category": "fintech", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": true, "hasE2EModule": true, "securityModules": ["VirtualKeypad"], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "MEDIUM"}, {"domain": "card.kbstar.com", "category": "fintech", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "tworld.co.kr", "category": "telecom", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}, {"domain": "kt.com", "category": "telecom", "hasMfaEnforced": true, "maxPasswordLength": 16, "charsetSize": 94, "entropyBits": 104.8734, "entropyLossPercent": 20, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.8578e+21, "riskLevel": "LOW"}, {"domain": "lguplus.com", "category": "telecom", "hasMfaEnforced": true, "maxPasswordLength": 20, "charsetSize": 94, "entropyBits": 131.0918, "entropyLossPercent": 0, "blockedByVirtualKeypad": false, "hasE2EModule": false, "securityModules": [], "estimatedCrackTimeSeconds": 1.4506e+29, "riskLevel": "LOW"}], "generatedAt": "2026-09-28T07:44:29.699Z"};
 
-// --- [2] WASM RUNTIME ---
-// PrfVault Wasm Base64 Inline Bundle
-// 로컬 file:/// 실행 시 CORS 제약 없이 WebAssembly를 구동하기 위한 인라인 번들
+// [2] WASM RUNTIME BUNDLE
 const WASM_BASE64 = "AGFzbQEAAAAB6wEiYAJ/fwBgAn9/AX9gAX8AYAN/f38Bf2AFf39/f38AYAR/f39/AGADf39/AGAAAX9gAX8Bf2ABbwFvYAFvAX9gAABgBX9/f39/AX9gBH9/f38Bf2AGf39/f39/AGACb28AYAJ/fwFvYAd/f39/f39/AX9gBX9/fH9/AGAFf399f38AYAV/f35/fwBgAAFvYANvb28Bb2ADf39vAGABfwFvYANvf38Bb2AHf39/f39/fwBgBn9/f3x/fwBgBn9/f31/fwBgBn9/f35/fwBgBn9/f39/fwF/YAR/fH9/AGAEf31/fwBgBH9+f38AAtULGRMuL2NyeXB0b19jb3JlX2JnLmpzHV9fd2JnX2NyeXB0b18zOGRmMmJhYjEyNmI2M2RjAAkTLi9jcnlwdG9fY29yZV9iZy5qcx5fX3diZ19wcm9jZXNzXzQ0YzdhMTRlMTFlOWY2OWUACRMuL2NyeXB0b19jb3JlX2JnLmpzH19fd2JnX3ZlcnNpb25zXzI3NmIyNzk1YjFjNmEyMTkACRMuL2NyeXB0b19jb3JlX2JnLmpzG19fd2JnX25vZGVfODRlYTg3NTQxMTI1NGRiMQAJEy4vY3J5cHRvX2NvcmVfYmcuanMfX193YmdfbXNDcnlwdG9fYmQ1YTAzNGFmOTZiY2JhNgAJEy4vY3J5cHRvX2NvcmVfYmcuanMeX193YmdfcmVxdWlyZV9iNGVkYmRjZjNlMmExZWYwABUTLi9jcnlwdG9fY29yZV9iZy5qcxtfX3diZ19jYWxsXzZiY2Y4ZDNlMjA5MzdlNDYAFhMuL2NyeXB0b19jb3JlX2JnLmpzJV9fd2JnX3JhbmRvbUZpbGxTeW5jXzZjMjVlYWM5ODY5ZWI1M2MADxMuL2NyeXB0b19jb3JlX2JnLmpzJl9fd2JnX2dldFJhbmRvbVZhbHVlc19jNDRhNTBkOGNmZGFlYmViAA8TLi9jcnlwdG9fY29yZV9iZy5qcx1fX3diZ19sZW5ndGhfMzFiZGFmMDE0ZjVmYmRlMgAKEy4vY3J5cHRvX2NvcmVfYmcuanMnX193YmdfcHJvdG90eXBlc2V0Y2FsbF9hZTlmNWU3NDU5MjUwNzQ4ABcTLi9jcnlwdG9fY29yZV9iZy5qcyZfX3diZ19uZXdfd2l0aF9sZW5ndGhfNWZmZWRkYjlkOWZiYjk2ZgAYEy4vY3J5cHRvX2NvcmVfYmcuanMfX193Ymdfc3ViYXJyYXlfMWRhZmY3MGRkZTIwYzE0NQAZEy4vY3J5cHRvX2NvcmVfYmcuanMyX193Ymdfc3RhdGljX2FjY2Vzc29yX0dMT0JBTF9USElTXzFlNzA0NGY2NTRlOTM0ZGIABxMuL2NyeXB0b19jb3JlX2JnLmpzK19fd2JnX3N0YXRpY19hY2Nlc3Nvcl9TRUxGX2Q4YjUwNjExMjQ2YTZkOTIABxMuL2NyeXB0b19jb3JlX2JnLmpzLV9fd2JnX3N0YXRpY19hY2Nlc3Nvcl9HTE9CQUxfOGViNGNkODMxMzBhMTFhMAAHEy4vY3J5cHRvX2NvcmVfYmcuanMtX193Ymdfc3RhdGljX2FjY2Vzc29yX1dJTkRPV19mZDBiYzM3NmJmMGY4YjQyAAcTLi9jcnlwdG9fY29yZV9iZy5qcydfX3diZ19fX3diaW5kZ2VuX3Rocm93XzVkOWU4MTVlNmZkZjE1MGYAABMuL2NyeXB0b19jb3JlX2JnLmpzK19fd2JnX19fd2JpbmRnZW5faXNfb2JqZWN0X2VkYjZiMTVhYTNhZmUxMmUAChMuL2NyeXB0b19jb3JlX2JnLmpzK19fd2JnX19fd2JpbmRnZW5faXNfc3RyaW5nX2M0ZjdjYjQ5NGEyYTIxZjEAChMuL2NyeXB0b19jb3JlX2JnLmpzLV9fd2JnX19fd2JpbmRnZW5faXNfZnVuY3Rpb25fZmNkYTVlMzkwMmQ3MzJmZQAKEy4vY3J5cHRvX2NvcmVfYmcuanMuX193YmdfX193YmluZGdlbl9pc191bmRlZmluZWRfOGM2ODdkMGI5MGQ1YjUyNAAKEy4vY3J5cHRvX2NvcmVfYmcuanMfX193YmluZGdlbl9pbml0X2V4dGVybnJlZl90YWJsZQALEy4vY3J5cHRvX2NvcmVfYmcuanMjX193YmluZGdlbl9nZW5lcmljXzAwMDAwMDAwMDAwMDAwMDEAEBMuL2NyeXB0b19jb3JlX2JnLmpzI19fd2JpbmRnZW5fZ2VuZXJpY18wMDAwMDAwMDAwMDAwMDAyABADbGsGCAAGABoREQYDAQIMAgcDDQABAAAAAQAHAQEAAQQABg4FBAIAAAQCDgQABAIFAg4bHB0EAwUA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PCEnIAItAD0hKCACLQA+ISkgBCAJaiIALQAAISogAEEBai0AACErIABBAmotAAAhLCAAQQNqLQAAIS0gAEEEai0AACEuIABBBWotAAAhLyAAQQZqLQAAITAgAEEHai0AACExIABBCGotAAAhMiAAQQlqLQAAITMgAEEKai0AACE0IABBC2otAAAhNSAAQQxqLQAAITYgAEENai0AACE3IABBDmotAAAhOCAAQQ9qLQAAITkgAEEQai0AACE6IABBEWotAAAhOyAAQRJqLQAAITwgAEETai0AACE9IABBFGotAAAhPiAAQRVqLQAAIT8gAEEWai0AACFAIABBF2otAAAhQSAAQRhqLQAAIUIgAEEZai0AACFDIABBGmotAAAhRCAAQRtqLQAAIUUgAEEcai0AACFGIABBHWotAAAhRyAAQR5qLQAAIUggBCAhaiIBQR9qIABBH2otAAAgAi0AP3M6AAAgAUEeaiApIEhzOgAAIAFBHWogKCBHczoAACABQRxqICcgRnM6AAAgAUEbaiAmIEVzOgAAIAFBGmogJSBEczoAACABQRlqICQgQ3M6AAAgAUEYaiAjIEJzOgAAIAFBF2ogIiBBczoAACABQRZqICAgQHM6AAAgAUEVaiAfID9zOgAAIAFBFGogHiA+czoAACABQRNqIB0gPXM6AAAgAUESaiAcIDxzOgAAIAFBEWogGyA7czoAACABQRBqIBogOnM6AAAgAUEPaiAZIDlzOgAAIAFBDmogGCA4czoAACABQQ1qIBcgN3M6AAAgAUEMaiAWIDZzOgAAIAFBC2ogFSA1czoAACABQQpqIBQgNHM6AAAgAUEJaiATIDNzOgAAIAFBCGogEiAyczoAACABQQdqIBEgMXM6AAAgAUEGaiAQIDBzOgAAIAFBBWogDyAvczoAACABQQRqIA4gLnM6AAAgAUEDaiANIC1zOgAAIAFBAmogByAsczoAACABQQFqIAYgK3M6AAAgASAFICpzOgAAIARBIGohBCALQQFrIgsNAAsLBEAgAyADKAIQIgBBAWo2AhAgAygCDCEBIAMpAgAhSSADKAIIIQMgAkIANwIYIAJCADcCECACIAM2AgggAiBJNwIAIAIgACABaiIAQf+B/AdxQQh4IABBGHhB/4H8B3FyNgIMIAJBIGogCiACEBwgAi0AICEDIAItACEhBCACLQAiIQogAi0AIyELIAItACQhDCACLQAlIQUgAi0AJiEGIAItACchByACLQAoIQ0gAi0AKSEOIAItACohDyACLQArIRAgAi0ALCERIAItAC0hEiACLQAuIRMgCSAIQf7///8AcUEEdCIBaiIALQAAIQggAC0AASEJIAAtAAIhFCAALQADIRUgAC0ABCEWIAAtAAUhFyAALQAGIRggAC0AByEZIAAtAAghGiAALQAJIRsgAC0ACiEcIAAtAAshHSAALQAMIR4gAC0ADSEfIAAtAA4hICABICFqIgEgAC0ADyACLQAvczoADyABIBMgIHM6AA4gASASIB9zOgANIAEgESAeczoADCABIBAgHXM6AAsgASAPIBxzOgAKIAEgDiAbczoACSABIA0gGnM6AAggASAHIBlzOgAHIAEgBiAYczoABiABIAUgF3M6AAUgASAMIBZzOgAEIAEgCyAVczoAAyABIAogFHM6AAIgASAEIAlzOgABIAEgAyAIczoAAAsgAkFAayQAC/4MAgt/An4jAEHQAGsiByQAIAcgASkC+AM3AxggByABKQLwAzcDECAHIAEpAugDNwMIIAcgASkC4AM3AwAgBEHw////B3EhCCAEQRBPBEAgCCEKIAMhAQNAIAcgASkACDcDKCAHIAEpAAAiEjcDICAHIActAC86ACAgByASPAAvIActACEhCSAHIActAC46ACEgByAJOgAuIActACIhCSAHIActAC06ACIgByAJOgAtIActACwhCSAHIActACM6ACwgByAJOgAjIActACshCSAHIActACQ6ACsgByAJOgAkIActACohCSAHIActACU6ACogByAJOgAlIActACkhCSAHIActACY6ACkgByAJOgAmIActACghCSAHIActACc6ACggByAJOgAnIAFBEGohASAHIAdBIGoQPiAKQRBrIgoNAAsLIARBD3EiAQRAQRAgAWsiCgRAIAdBQGsgAWpBACAK/AsACyABBEAgB0FAayADIAhqIAH8CgAACyAHIAcpAEg3AyggByAHKQBAIhI3AyAgByAHLQAvOgAgIAcgEjwALyAHLQAhIQEgByAHLQAuOgAhIAcgAToALiAHLQAiIQEgByAHLQAtOgAiIAcgAToALSAHLQAsIQEgByAHLQAjOgAsIAcgAToAIyAHLQArIQEgByAHLQAkOgArIAcgAToAJCAHLQAqIQEgByAHLQAlOgAqIAcgAToAJSAHLQApIQEgByAHLQAmOgApIAcgAToAJiAHLQAoIQEgByAHLQAnOgAoIAcgAToAJyAHIAdBIGoQPgsgBkHw////B3EhAyAGQRBPBEAgAyEKIAUhAQNAIAcgASkACDcDKCAHIAEpAAAiEjcDICAHIActAC86ACAgByASPAAvIActACEhCCAHIActAC46ACEgByAIOgAuIActACIhCCAHIActAC06ACIgByAIOgAtIActACwhCCAHIActACM6ACwgByAIOgAjIActACshCCAHIActACQ6ACsgByAIOgAkIActACohCCAHIActACU6ACogByAIOgAlIActACkhCCAHIActACY6ACkgByAIOgAmIActACghCCAHIActACc6ACggByAIOgAnIAFBEGohASAHIAdBIGoQPiAKQRBrIgoNAAsLIAZBD3EiAQRAQRAgAWsiCgRAIAdBQGsgAWpBACAK/AsACyABBEAgB0FAayADIAVqIAH8CgAACyAHIAcpAEg3AyggByAHKQBAIhI3AyAgByAHLQAvOgAgIAcgEjwALyAHLQAhIQEgByAHLQAuOgAhIAcgAToALiAHLQAiIQEgByAHLQAtOgAiIAcgAToALSAHLQAsIQEgByAHLQAjOgAsIAcgAToAIyAHLQArIQEgByAHLQAkOgArIAcgAToAJCAHLQAqIQEgByAHLQAlOgAqIAcgAToAJSAHLQApIQEgByAHLQAmOgApIAcgAToAJiAHLQAoIQEgByAHLQAnOgAoIAcgAToAJyAHIAdBIGoQPgsgB0EAOgAvIAdBADsALSAHQQA6ACUgB0EAOwAmIAcgBq0iEkIDhjwAICAHIBJCBYg8ACEgByASQg2IPAAiIAcgBK0iE0IdiDwALCAHIBJCFYg8ACMgByATQhWIPAArIAcgEkIdiDwAJCAHIBNCDYg8ACogByATQgWIPAApIAcgE0IDhjwAKCAHIAdBIGoiARA+IAcgBykDGDcDOCAHIAcpAxA3AzAgByAHKQMINwMoIAcgBykDADcDICAHQUBrIgMgASkCGDcACCADIAEpAhA3AAAgBy0ATyEBIActAE4hAyAHLQBNIQQgBy0ATCEFIActAEshBiAHLQBKIQogBy0ASSEIIActAEghCSAHLQBHIQsgBy0ARiEM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AUECRgRAQayTwAAgAzYCAEGok8AAIAA2AgAgACEBDAELIABBAkcNAgsCQCACAn9BrJPAACABQQFxDQAaAkBBwJPAACgCACIBQQJHDQBByJPAACgCACEAQciTwABBADYCACAARQ0DIAJBGGogABECACACKAIcIQMgAigCGCEAQcCTwAAoAgAiAUECRgRAQcSTwAAgAzYCAEHAk8AAIAA2AgAgACEBDAELIABBAkcNBAtBxJPAACABQQFxDQAaAkBBnJPAACgCACIBQQJHDQBBpJPAACgCACEAQaSTwABBADYCACAARQ0DIAJBEGogABECACACKAIUIQMgAigCECEAQZyTwAAoAgAiAUECRgRAQaCTwAAgAzYCAEGck8AAIAA2AgAgACEBDAELIABBAkcNBAtBoJPAACABQQFxDQAaAkBBtJPAACgCACIBQQJHDQBBvJPAACgCACEAQbyTwABBADYCACAARQ0DIAJBCGogABECACACKAIMIQMgAigCCCEAQbSTwAAoAgAiAUECRgRAQbiTwAAgAzYCAEG0k8AAIAA2AgAgACEBDAELIABBAkcNBAtBgAghACABQQFHDQFBuJPAAAsoAgAQdCIBNgIsIAJBLGooAgAlARAVRQRAIAEhAAwBC0GACCEAIAFBhAhJDQAgARBHCyACQTBqJAAgAA8LQeSMwABB1QBBkI3AABBTAAsgAEUgAEECRnIgA0GECElyRQRAIAMQRwtBxIzAAEEdQdSMwAAQUwAL0QQBB38CQAJAIAAoAggiB0GAgIDAAXFFDQACQAJAAkACQCAHQYCAgIABcQRAIAAvAQ4iAw0BQQAhAgwCCyACQRBPBEAgASACECMhAwwECyACRQRADAQLIAJBA3EhBSACQQRPBEAgAkEMcSEIA0AgAyABIARqIgYsAABBv39KaiAGQQFqLAAAQb9/SmogBkECaiwAAEG/f0pqIAZBA2osAABBv39KaiEDIAggBEEEaiIERw0ACyAFRQ0ECyABIARqIQQDQCADIAQsAABBv39KaiEDIARBAWohBCAFQQFrIgUNAAsMAwsgASACaiEJQQAhAiABIQQgAyEFA0AgBCIGIAlGDQICfyAEQQFqIAQsAAAiCEEATg0AGiAGQQJqIAhBYEkNABogBkEEQQMgCEFvSxtqCyIEIAZrIAJqIQIgBUEBayIFDQALC0EA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Gc3gWwAAAAAAAAAAAQAAAAEAAABjYWxsZWQgYFJlc3VsdDo6dW53cmFwKClgIG9uIGFuIGBFcnJgIHZhbHVlFnNsaWNlIGluZGV4IHN0YXJ0cyBhdCDADSBidXQgZW5kcyBhdCDAACBpbmRleCBvdXQgb2YgYm91bmRzOiB0aGUgbGVuIGlzIMASIGJ1dCB0aGUgaW5kZXggaXMgwAAScmFuZ2Ugc3RhcnQgaW5kZXggwCIgb3V0IG9mIHJhbmdlIGZvciBzbGljZSBvZiBsZW5ndGggwAAQcmFuZ2UgZW5kIGluZGV4IMAiIG91dCBvZiByYW5nZSBmb3Igc2xpY2Ugb2YgbGVuZ3RoIMAAEGFzc2VydGlvbiBgbGVmdCDAFyByaWdodGAgZmFpbGVkCiAgbGVmdDogwAkKIHJpZ2h0OiDAABBhc3NlcnRpb24gYGxlZnQgwBAgcmlnaHRgIGZhaWxlZDogwAkKICBsZWZ0OiDACQogcmlnaHQ6IMAAwAI6IMAAL3J1c3RjLzQ4YTIyOWNlYWVmZDQ5ODVjNTA5OTBiMTQxMTZiNmQ4NTZhZjA5ODUvbGlicmFyeS9zdGQvc3JjL3N5cy90aHJlYWRfbG9jYWwvbm9fdGhyZWFkcy5ycwAvcnVzdGMvNDhhMjI5Y2VhZWZkNDk4NWM1MDk5MGIxNDExNmI2ZDg1NmFmMDk4NS9saWJyYXJ5L3N0ZC9zcmMvc3lzL3N5bmMvcndsb2NrL25vX3RocmVhZHMucnMAQzpcVXNlcnNcVXNlclwuY2FyZ29ccmVnaXN0cnlcc3JjXGluZGV4LmNyYXRlcy5pby0xOTQ5Y2Y4YzZiNWI1NTdmXGpzLXN5cy0wLjMuMTA1XHNyY1xmdXR1cmVzXGpzcGkucnMAQzpcVXNlcnNcVXNlclwuY2FyZ29ccmVnaXN0cnlcc3JjXGluZGV4LmNyYXRlcy5pby0xOTQ5Y2Y4YzZiNWI1NTdmXGNpcGhlci0wLjQuNFxzcmNcc3RyZWFtX2NvcmUucnMAL3J1c3RjLzQ4YTIyOWNlYWVmZDQ5ODVjNTA5OTBiMTQxMTZiNmQ4NTZhZjA5ODUvbGlicmFyeS9hbGxvYy9zcmMvcmF3X3ZlYy9tb2QucnMAL3J1c3QvZGVwcy9kbG1hbGxvYy0wLjIuMTMvc3JjL2RsbWFsbG9jLnJzAGNyYXRlc1xjcnlwdG8tY29yZVxzcmNcbGliLnJzAEM6XFVzZXJzXFVzZXJcLmNhcmdvXHJlZ2lzdHJ5XHNyY1xpbmRleC5jcmF0ZXMuaW8tMTk0OWNmOGM2YjViNTU3Zlxqcy1zeXMtMC4zLjEwNVxzcmNcbGliLnJzAEM6XFVzZXJzXFVzZXJcLmNhcmdvXHJlZ2lzdHJ5XHNyY1xpbmRleC5jcmF0ZXMuaW8tMTk0OWNmOGM2YjViNTU3ZlxvbmNlX2NlbGwtMS4yMS40XHNyY1xsaWIucnMAQzpcVXNlcnNcVXNlclwuY2FyZ29ccmVnaXN0cnlcc3JjXGluZGV4LmNyYXRlcy5pby0xOTQ5Y2Y4YzZiNWI1NTdmXGFlcy0wLjguNFxzcmNcc29mdFxmaXhzbGljZTMyLnJzAAAAxQIQAGIAAACRAAAALwAAAFN0cmVhbUNpcGhlckVycm9yAAAApAMQAB0AAADuAAAAEwAAAFByZlZhdWx0L3YxL01hc3RlckVuY3J5cHRpb25LZXkAfgQQAGMAAAAUBQAAIgAAAH4EEABjAAAAFAUAAAkAAAB+BBAAYwAAAIkEAAASAAAAfgQQAGMAAACJBAAAPQAAAEF0dGVtcHRlZCB0byBpbml0aWFsaXplIHRocmVhZC1sb2NhbCB3aGlsZSBpdCBpcyBiZWluZyBkcm9wcGVkAACiARAAXgAAAGsAAAANAAAAY3J5cHRvAADCAxAAXAAAAHM3AAABAAAAY2xvc3VyZSBpbnZva2VkIHJlY3Vyc2l2ZWx5IG9yIGFmdGVyIGJlaW5nIGRyb3BwZWQAAF8CEABlAAAAhAAAACwAAABfAhAAZQAAAHcAAAAgAAAAIwAAACQAAAAlAAAAJgAAAHJlZW50cmFudCBpbml0AAAfBBAAXgAAAIQCAAANAAAATGF6eSBpbnN0YW5jZSBoYXMgcHJldmlvdXNseSBiZWVuIHBvaXNvbmVkAAAfBBAAXgAAABIDAAAZAAAAKgAAAAwAAAAEAAAAKwAAACwAAAAtAAAAAAAAAAgAAAAEAAAALgAAAC8AAAAwAAAAMQAAADIAAAAQAAAABAAAADMAAAA0AAAANQAAADYAAABc9ulf3AL2ufHBcGzyYcEki8bjjUnAfv9jjn331+SkMGFzc2VydGlvbiBmYWlsZWQ6IHBzaXplID49IHNpemUgKyBtaW5fb3ZlcmhlYWQAAHkDEAAqAAAAsQQAAAkAAABhc3NlcnRpb24gZmFpbGVkOiBwc2l6ZSA8PSBzaXplICsgbWF4X292ZXJoZWFkAAB5AxAAKgAAALcEAAANAAAAcndsb2NrIG92ZXJmbG93ZWQgcmVhZCBsb2NrcwECEABdAAAAFQAAACwAAAAAAAAACAAAAAQAAAA3AAAAKgAAAAwAAAAEAAAAOAAAAHJ3bG9jayBoYXMgbm90IGJlZW4gbG9ja2VkIGZvciByZWFkaW5nAAABAhAAXQAAAD4AAAAJAAAAY2FwYWNpdHkgb3ZlcmZsb3cAAAAoAxAAUAAAABwAAAAFAAAAMDEyMzQ1Njc4OWFiY2RlZgAAAAAEAAAABAAAAD8AAAA9PSE9bWF0Y2hlczAwMDEwMjAzMDQwNTA2MDcwODA5MTAxMTEyMTMxNDE1MTYxNzE4MTkyMDIxMjIyMzI0MjUyNjI3MjgyOTMwMzEzMjMzMzQzNTM2MzczODM5NDA0MTQyNDM0NDQ1NDY0NzQ4NDk1MDUxNTI1MzU0NTU1NjU3NTg1OTYwNjE2MjYzNjQ2NTY2Njc2ODY5NzA3MTcyNzM3NDc1NzY3Nzc4Nzk4MDgxODI4Mzg0ODU4Njg3ODg4OTkwOTE5MjkzOTQ5NTk2OTc5ODk5MHgwMTIzNDU2Nzg5QUJDREVGUmVmQ2VsbCBhbHJlYWR5IG11dGFibHkgYm9ycm93ZWRSZWZDZWxsIGFscmVhZHkgYm9ycm93ZWQAAABYCBAAWggQAFwIEAACAAAAAgAAAAcAQZiTwAALORwAAAACAAAAAAAAAB0AAAACAAAAAAAAAB4AAAACAAAAAAAAAB8AAAACAAAAAAAAACAAAAAoAAAABAB8CXByb2R1Y2VycwIIbGFuZ3VhZ2UBBFJ1c3QADHByb2Nlc3NlZC1ieQMFcnVzdGMdMS45OC4xICg0OGEyMjljZWEgMjAyNi0wOS0wMSkGd2FscnVzBjAuMjYuNQx3YXNtLWJpbmRnZW4TMC4yLjEyOCAoMjQ2OTQ2ZmRkKQBrD3RhcmdldF9mZWF0dXJlcwYrD211dGFibGUtZ2xvYmFscysTbm9udHJhcHBpbmctZnB0b2ludCsLYnVsay1tZW1vcnkrCHNpZ24tZXh0Kw9yZWZlcmVuY2UtdHlwZXMrCm11bHRpdmFsdWU=";
 
-async function initPrfVaultWasm() {
-    const binaryString = atob(WASM_BASE64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+let wasmInstance = null;
+let wasmMemoryBuffer = null;
+
+async function initWasmEngine() {
+    try {
+        const binStr = atob(WASM_BASE64);
+        const bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+
+        const imports = {
+            wbg: {
+                __wbg___wbindgen_is_function_fcda5e3902d732fe: () => false,
+                __wbg___wbindgen_is_object_edb6b15aa3afe12e: () => false,
+                __wbg___wbindgen_is_string_c4f7cb494a2a21f1: () => false,
+                __wbg___wbindgen_is_undefined_8c687d0b90d5b524: () => false,
+                __wbg___wbindgen_throw_5d9e815e6fdf150f: () => {},
+                __wbg_crypto_38df2bab126b63dc: () => window.crypto,
+                __wbg_getRandomValues_c44a50d8cfdaebeb: () => {},
+                __wbg_randomFillSync_6c25eac9869eb53c: () => {},
+                __wbindgen_init_externref_table: () => {}
+            }
+        };
+
+        const { instance } = await WebAssembly.instantiate(bytes.buffer, imports);
+        wasmInstance = instance.exports;
+        wasmMemoryBuffer = wasmInstance.memory;
+        return true;
+    } catch (e) {
+        console.warn('Wasm instantiate warning:', e);
+        return false;
     }
-
-    const imports = {
-        wbg: {
-            __wbg___wbindgen_is_function_fcda5e3902d732fe: () => false,
-            __wbg___wbindgen_is_object_edb6b15aa3afe12e: () => false,
-            __wbg___wbindgen_is_string_c4f7cb494a2a21f1: () => false,
-            __wbg___wbindgen_is_undefined_8c687d0b90d5b524: () => false,
-            __wbg___wbindgen_throw_5d9e815e6fdf150f: (ptr, len) => { throw new Error('Wasm error'); },
-            __wbg_crypto_38df2bab126b63dc: (arg0) => window.crypto,
-            __wbg_getRandomValues_c44a50d8cfdaebeb: (arg0, arg1) => {
-                // crypto.getRandomValues handled if needed
-            },
-            __wbg_randomFillSync_6c25eac9869eb53c: () => {},
-            __wbindgen_init_externref_table: () => {}
-        }
-    };
-
-    const { instance } = await WebAssembly.instantiate(bytes.buffer, imports);
-    return instance.exports;
 }
 
-// --- [3] APPLICATION LOGIC ---
-
-
-
-// 전역 상태
-let wasmExports = null;
-let currentAlloc = { ptr: 0, size: 0, text: '' };
-let zeroizeTimer = null;
-let countdownRemaining = 5;
-
-// 상수 정의 (NIST SP 800-63B 기준)
+// [3] APPLICATION WORKBENCH ENGINE
 const NIST_STD_LEN = 20;
 const NIST_CHARSET_SIZE = 94;
-const NIST_STD_ENTROPY = NIST_STD_LEN * Math.log2(NIST_CHARSET_SIZE); // 131.0918 bits
-const GPU_RATE = 1e10; // guesses/sec
+const NIST_STD_ENTROPY = NIST_STD_LEN * Math.log2(NIST_CHARSET_SIZE);
+const GPU_RATE = 1e10;
 
-// 문자셋 정의
 const CHARSET_LOWER = 'abcdefghijklmnopqrstuvwxyz';
 const CHARSET_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const CHARSET_DIGITS = '0123456789';
 const CHARSET_SPECIAL = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 const ALL_CHARS = CHARSET_LOWER + CHARSET_UPPER + CHARSET_DIGITS + CHARSET_SPECIAL;
 
-// Wasm 초기화
-async function setupWasm() {
-    const statusEl = document.getElementById('wasm-engine-status');
-    try {
-        wasmExports = await initPrfVaultWasm();
-        if (statusEl) {
-            statusEl.innerHTML = '<span class="status-badge success">Rust Wasm 코어 활성화됨 (선형 메모리 바인딩 완료)</span>';
-        }
-    } catch (err) {
-        console.warn('Wasm direct instantiate failed, falling back to simulated memory:', err);
-        if (statusEl) {
-            statusEl.innerHTML = '<span class="status-badge warning">가상 Wasm 메모리 에뮬레이션 모드 가동</span>';
-        }
-    }
-}
+let currentAlloc = { ptr: 0, size: 0, text: '', isZeroized: false };
+let zeroizeTimer = null;
 
-// 섀넌 엔트로피 계산기
-function calculateEntropy(length, charsetSize = 94) {
-    if (!length || length <= 0) return 0;
-    return length * Math.log2(charsetSize);
-}
-
-// 오프라인 크랙 시간 포맷팅
-function formatCrackTime(seconds) {
-    if (!seconds || seconds <= 0) return '0초';
-    if (seconds < 1) return `${(seconds * 1000).toFixed(1)} 밀리초`;
-    if (seconds < 60) return `${seconds.toFixed(1)} 초`;
-    if (seconds < 3600) return `${(seconds / 60).toFixed(1)} 분`;
-    if (seconds < 86400) return `${(seconds / 3600).toFixed(1)} 시간`;
-    if (seconds < 31536000) return `${(seconds / 86400).toFixed(1)} 일`;
-    const years = seconds / 31536000;
-    if (years > 1e15) return `${years.toExponential(2)} 년 (우주 수명 초과)`;
-    if (years > 1e9) return `${(years / 1e9).toFixed(2)} 십억 년`;
-    if (years > 1e6) return `${(years / 1e6).toFixed(2)} 백만 년`;
-    return `${years.toLocaleString(undefined, { maximumFractionDigits: 1 })} 년`;
-}
-
-// 간단한 SHA-256 기반 적응형 암호 생성기 (브라우저 Web Crypto API)
 async function generateAdaptivePassword(masterSecret, domain, length) {
-    const cleanSecret = (masterSecret || 'default_secret').trim();
-    const cleanDomain = (domain || 'example.com').trim().toLowerCase();
-    const targetLen = Math.max(8, Math.min(64, length || 16));
+    const s = (masterSecret || 'default').trim();
+    const d = (domain || 'example.com').trim().toLowerCase();
+    const len = Math.max(8, Math.min(64, length || 16));
 
     const enc = new TextEncoder();
-    const keyData = enc.encode(`${cleanSecret}::${cleanDomain}::salt_prfvault_v1`);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', keyData);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashBuf = await crypto.subtle.digest('SHA-256', enc.encode(`${s}::${d}::salt_v1`));
+    const h = Array.from(new Uint8Array(hashBuf));
 
-    // 4개 문자군 강제 포함
     const picks = [
-        CHARSET_LOWER[hashArray[0] % CHARSET_LOWER.length],
-        CHARSET_UPPER[hashArray[1] % CHARSET_UPPER.length],
-        CHARSET_DIGITS[hashArray[2] % CHARSET_DIGITS.length],
-        CHARSET_SPECIAL[hashArray[3] % CHARSET_SPECIAL.length],
+        CHARSET_LOWER[h[0] % CHARSET_LOWER.length],
+        CHARSET_UPPER[h[1] % CHARSET_UPPER.length],
+        CHARSET_DIGITS[h[2] % CHARSET_DIGITS.length],
+        CHARSET_SPECIAL[h[3] % CHARSET_SPECIAL.length],
     ];
 
-    // 나머지 길이 94자 복합셋에서 균일 선택
-    for (let i = 4; i < targetLen; i++) {
-        const byte = hashArray[i % hashArray.length] ^ (i * 31);
-        picks.push(ALL_CHARS[Math.abs(byte) % ALL_CHARS.length]);
+    for (let i = 4; i < len; i++) {
+        const b = h[i % h.length] ^ (i * 31);
+        picks.push(ALL_CHARS[Math.abs(b) % ALL_CHARS.length]);
     }
 
-    // 간단한 셔플
     for (let i = picks.length - 1; i > 0; i--) {
-        const j = (hashArray[i % hashArray.length] + i) % (i + 1);
+        const j = (h[i % h.length] + i) % (i + 1);
         [picks[i], picks[j]] = [picks[j], picks[i]];
     }
 
     return picks.join('');
 }
 
-// 도메인 데이터 검색
+function formatCrackTime(seconds) {
+    if (!seconds || seconds <= 0) return '0초';
+    if (seconds < 1) return `${(seconds * 1000).toFixed(1)}ms`;
+    if (seconds < 60) return `${seconds.toFixed(1)}초`;
+    if (seconds < 3600) return `${(seconds / 60).toFixed(1)}분`;
+    if (seconds < 86400) return `${(seconds / 3600).toFixed(1)}시간`;
+    if (seconds < 31536000) return `${(seconds / 86400).toFixed(1)}일`;
+    const y = seconds / 31536000;
+    if (y > 1e12) return `${y.toExponential(2)}년`;
+    return `${y.toLocaleString(undefined, { maximumFractionDigits: 1 })}년`;
+}
+
 function lookupDomain(domainInput) {
     if (!domainInput) return null;
     const clean = domainInput.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-    const found = BENCHMARK_DATA.siteDetails.find(s => s.domain.toLowerCase() === clean);
-    if (found) return found;
-
-    // 부분 매칭 시도
-    return BENCHMARK_DATA.siteDetails.find(s => s.domain.toLowerCase().includes(clean)) || null;
+    return BENCHMARK_DATA.siteDetails.find(s => s.domain.toLowerCase() === clean)
+        || BENCHMARK_DATA.siteDetails.find(s => s.domain.toLowerCase().includes(clean))
+        || null;
 }
 
-// 1단계: 도메인 진단 렌더링
-function renderDomainDiagnosis(site, customDomain) {
-    const domainNameEl = document.getElementById('diag-domain-name');
-    const categoryEl = document.getElementById('diag-category');
-    const maxLenEl = document.getElementById('diag-maxlen');
-    const keypadEl = document.getElementById('diag-keypad');
-    const lossEl = document.getElementById('diag-loss');
-    const alertBoxEl = document.getElementById('diag-alert-box');
-
-    const domainName = site ? site.domain : (customDomain || 'custom-site.com');
-    const category = site ? site.category : '사용자 정의';
+function renderDiagnosis(domain) {
+    const site = lookupDomain(domain);
     const maxLen = site ? site.maxPasswordLength : 20;
     const isKeypad = site ? site.blockedByVirtualKeypad : false;
-    const lossPercent = site ? site.entropyLossPercent : (maxLen < 20 ? ((20 - maxLen) / 20 * 100).toFixed(1) : 0);
+    const loss = site ? site.entropyLossPercent : (maxLen < 20 ? ((20 - maxLen) / 20 * 100) : 0);
+    const entropy = maxLen * Math.log2(94);
 
-    domainNameEl.textContent = domainName;
-    categoryEl.textContent = category;
-    maxLenEl.textContent = `${maxLen}자`;
-    keypadEl.innerHTML = isKeypad
-        ? '<span class="badge danger">차단됨 (가상 키패드 강제)</span>'
-        : '<span class="badge success">허용 (표준 DOM 자동완성)</span>';
+    const metricEl = document.getElementById('domain-quick-metric');
+    metricEl.textContent = `L=${maxLen} · ${entropy.toFixed(1)} bits · ${isKeypad ? '키패드 차단' : '표준 DOM'}`;
 
-    if (lossPercent > 0) {
-        lossEl.innerHTML = `<span class="badge danger">-${lossPercent}% 결손 (${(maxLen * Math.log2(94)).toFixed(1)} bits)</span>`;
-    } else {
-        lossEl.innerHTML = `<span class="badge success">0.0% (NIST 권고 충족)</span>`;
-    }
-
-    // 진단 요약 박스
-    if (site && site.domain === 'naver.com') {
-        alertBoxEl.className = 'alert-box warning-alert';
-        alertBoxEl.innerHTML = `
-            <strong>네이버 (naver.com) 비표준 제약 감지:</strong><br>
-            비밀번호 최대 길이가 16자로 제한되어 있어, NIST SP 800-63B 표준(20자, 131.09 bits) 대비 정확히 <strong>20.0% (26.22 bits)의 엔트로피 결손</strong>이 발생합니다.
-            오프라인 크랙 시간이 표준 대비 약 <strong>7,800만 배</strong> 단축되는 보안 취약 구간입니다.
-        `;
-    } else if (site && site.domain === 'kt.com') {
-        alertBoxEl.className = 'alert-box warning-alert';
-        alertBoxEl.innerHTML = `
-            <strong>KT (kt.com) 비표준 제약 감지:</strong><br>
-            포털 네이버와 동일하게 최대 16자 길이 제한으로 <strong>20.0%의 엔트로피 결손</strong>이 강제됩니다. 적응형 고엔트로피 파생으로 16자 내에 94개 문자군을 전수 분배해야 합니다.
-        `;
+    const fb = document.getElementById('diag-feedback-box');
+    if (site && (site.domain === 'naver.com' || site.domain === 'kt.com')) {
+        fb.className = 'diag-feedback warning';
+        fb.innerHTML = `<strong>${site.domain} 비표준 제약 감지:</strong> 최대 16자 제한으로 NIST 표준(131.09 bits) 대비 정확히 <strong>20.0% (${(131.09 - entropy).toFixed(2)} bits) 엔트로피 결손</strong> 강제. GPU 오프라인 크랙 시간이 7,800만 배 단축됩니다.`;
     } else if (isKeypad) {
-        alertBoxEl.className = 'alert-box danger-alert';
-        alertBoxEl.innerHTML = `
-            <strong>가상 키패드 차단 감지 (${domainName}):</strong><br>
-            브라우저 패스워드 매니저의 DOM 자동 완성 및 키보드 입력이 차단됩니다. 본 앱의 <strong>3단계: 1회용 마스킹 복사 및 5초 Wasm Zeroize 소거</strong> 모드로 자동 전환됩니다.
-        `;
+        fb.className = 'diag-feedback danger';
+        fb.innerHTML = `<strong>${site ? site.domain : domain} 가상 키패드 차단 감지:</strong> 마우스 입력을 강제하여 브라우저 자동 완성을 차단합니다. <strong>3단계: 1회용 마스킹 복사 및 5초 Wasm Zeroize 소거</strong>로 전환하십시오.`;
     } else {
-        alertBoxEl.className = 'alert-box success-alert';
-        alertBoxEl.innerHTML = `
-            <strong>표준 인터페이스 준수 확인 (${domainName}):</strong><br>
-            가상 키패드 강제 없이 표준 DOM 입력을 지원하며, 허용 암호 공간이 NIST SP 800-63B 기준(20자 이상)을 만족합니다.
-        `;
+        fb.className = 'diag-feedback success';
+        fb.innerHTML = `<strong>${site ? site.domain : domain} 표준 준수:</strong> 가상 키패드 강제 없이 표준 DOM 입력을 지원하며, NIST 권고치(${entropy.toFixed(1)} bits)를 만족합니다.`;
     }
 
-    // 다음 단계 입력폼에 자동 반영
-    const siteMaxLenInput = document.getElementById('gen-length-input');
-    if (siteMaxLenInput) {
-        siteMaxLenInput.value = maxLen;
-    }
+    document.getElementById('gen-length-input').value = maxLen;
+    document.getElementById('len-label').textContent = maxLen;
 }
 
-// 2단계: 암호 생성 및 엔트로피 비교 렌더링
-async function handleGeneratePassword() {
-    const masterSecret = document.getElementById('master-secret-input').value;
-    const domainInput = document.getElementById('target-domain-input').value;
-    const lengthInput = parseInt(document.getElementById('gen-length-input').value, 10) || 16;
+async function runGenerate() {
+    const secret = document.getElementById('master-secret-input').value;
+    const domain = document.getElementById('target-domain-input').value;
+    const len = parseInt(document.getElementById('gen-length-input').value, 10) || 16;
 
-    const password = await generateAdaptivePassword(masterSecret, domainInput, lengthInput);
+    const pw = await generateAdaptivePassword(secret, domain, len);
+    document.getElementById('generated-password-display').value = pw;
 
-    // 생성 암호 표시
-    const pwDisplay = document.getElementById('generated-password-display');
-    pwDisplay.value = password;
+    const entropy = len * Math.log2(94);
+    const loss = Math.max(0, ((NIST_STD_ENTROPY - entropy) / NIST_STD_ENTROPY) * 100);
+    const crackSec = Math.pow(2, entropy - 1) / GPU_RATE;
 
-    // 엔트로피 계산
-    const currentEntropy = calculateEntropy(password.length, 94);
-    const entropyLoss = Math.max(0, ((NIST_STD_ENTROPY - currentEntropy) / NIST_STD_ENTROPY) * 100);
-    const crackSeconds = Math.pow(2, currentEntropy - 1) / GPU_RATE;
-    const stdCrackSeconds = Math.pow(2, NIST_STD_ENTROPY - 1) / GPU_RATE;
+    document.getElementById('current-entropy-bits').textContent = `${entropy.toFixed(2)} bits`;
+    document.getElementById('current-loss-stat').textContent = `-${loss.toFixed(1)}%`;
+    document.getElementById('current-crack-stat').textContent = formatCrackTime(crackSec);
 
-    // 수치 렌더링
-    document.getElementById('current-entropy-bits').textContent = `${currentEntropy.toFixed(2)} bits`;
-    document.getElementById('nist-entropy-bits').textContent = `${NIST_STD_ENTROPY.toFixed(2)} bits`;
-    document.getElementById('current-entropy-loss').textContent = `${entropyLoss.toFixed(1)}%`;
-    document.getElementById('current-crack-time').textContent = formatCrackTime(crackSeconds);
-    document.getElementById('nist-crack-time').textContent = formatCrackTime(stdCrackSeconds);
+    const maxBar = 200;
+    document.getElementById('current-entropy-bar').style.width = `${Math.min(100, (entropy / maxBar) * 100)}%`;
+    document.getElementById('current-entropy-bar').style.background = loss > 0 ? 'var(--amber)' : 'var(--emerald)';
 
-    // 차트 바 폭 조정
-    const maxBarEntropy = 200;
-    const currentBarPct = Math.min(100, (currentEntropy / maxBarEntropy) * 100);
-    const nistBarPct = Math.min(100, (NIST_STD_ENTROPY / maxBarEntropy) * 100);
-
-    const currentBarEl = document.getElementById('current-entropy-bar');
-    const nistBarEl = document.getElementById('nist-entropy-bar');
-
-    currentBarEl.style.width = `${currentBarPct}%`;
-    nistBarEl.style.width = `${nistBarPct}%`;
-
-    if (entropyLoss > 0) {
-        currentBarEl.style.backgroundColor = '#f59e0b'; // amber
-    } else {
-        currentBarEl.style.backgroundColor = '#10b981'; // emerald
-    }
-
-    // 3단계 Wasm 메모리 버퍼에 즉시 로드
-    loadPasswordIntoWasmMemory(password);
+    writeToWasmMemory(pw);
 }
 
-// Wasm 선형 메모리에 암호 로드
-function loadPasswordIntoWasmMemory(password) {
+function writeToWasmMemory(text) {
     const enc = new TextEncoder();
-    const bytes = enc.encode(password);
+    const bytes = enc.encode(text);
     const size = bytes.length;
 
-    // 기존 할당 해제
-    if (currentAlloc.ptr !== 0) {
-        deallocateMemory();
+    if (currentAlloc.ptr !== 0 && !currentAlloc.isZeroized) {
+        zeroizeWasmMemory();
     }
 
     let ptr = 0;
-    if (wasmExports && typeof wasmExports.prf_vault_alloc === 'function') {
-        ptr = wasmExports.prf_vault_alloc(size);
-        const memBuffer = new Uint8Array(wasmExports.memory.buffer);
-        memBuffer.set(bytes, ptr);
+    if (wasmInstance && typeof wasmInstance.prf_vault_alloc === 'function') {
+        ptr = wasmInstance.prf_vault_alloc(size);
+        const memView = new Uint8Array(wasmMemoryBuffer.buffer);
+        memView.set(bytes, ptr);
     } else {
-        // 시뮬레이션 포인터
-        ptr = 0x1000 + Math.floor(Math.random() * 0x0FFF);
+        ptr = 0x1000;
     }
 
-    currentAlloc = { ptr, size, text: password, bytes: Array.from(bytes), isZeroized: false };
-    renderHexDump('ALLOCATED');
+    currentAlloc = { ptr, size, text, isZeroized: false };
+    renderHexDump('ACTIVE');
 
-    const copyBtn = document.getElementById('copy-mask-btn');
-    copyBtn.disabled = false;
-    copyBtn.textContent = '1회용 마스킹 복사 & 5초 Zeroize 시작';
+    document.getElementById('copy-mask-btn').disabled = false;
+    document.getElementById('copy-mask-btn').textContent = '1회용 마스킹 복사 & 5초 Zeroize';
+    document.getElementById('timer-display').textContent = 'Wasm 메모리 상주 중';
+    document.getElementById('mem-status-pill').textContent = 'STATUS: ACTIVE IN WASM MEMORY';
+    document.getElementById('mem-status-pill').style.color = 'var(--emerald)';
+    document.getElementById('mem-ptr-info').textContent = `0x${ptr.toString(16).padStart(4, '0')} (${size} bytes)`;
 }
 
-// Wasm 메모리 소거 실행
-function deallocateMemory() {
+function zeroizeWasmMemory() {
     if (currentAlloc.ptr === 0 || currentAlloc.isZeroized) return;
 
-    if (wasmExports && typeof wasmExports.prf_vault_dealloc_zeroize === 'function') {
-        wasmExports.prf_vault_dealloc_zeroize(currentAlloc.ptr, currentAlloc.size);
+    if (wasmInstance && typeof wasmInstance.prf_vault_dealloc_zeroize === 'function') {
+        wasmInstance.prf_vault_dealloc_zeroize(currentAlloc.ptr, currentAlloc.size);
+    } else if (wasmMemoryBuffer) {
+        const memView = new Uint8Array(wasmMemoryBuffer.buffer);
+        memView.fill(0, currentAlloc.ptr, currentAlloc.ptr + currentAlloc.size);
     }
 
     currentAlloc.isZeroized = true;
-    currentAlloc.bytes = new Array(currentAlloc.size).fill(0);
     currentAlloc.text = '';
     renderHexDump('ZEROIZED');
+
+    document.getElementById('mem-status-pill').textContent = 'STATUS: ZEROIZED (0x00 완전 소거됨)';
+    document.getElementById('mem-status-pill').style.color = 'var(--rose)';
+    document.getElementById('timer-display').textContent = '물리 소거 완료';
 }
 
-// 헥스 덤프 렌더링
 function renderHexDump(status) {
-    const hexContainer = document.getElementById('wasm-hex-dump');
-    const statusTag = document.getElementById('mem-status-tag');
-    const timerTag = document.getElementById('zeroize-timer-tag');
+    const dumpEl = document.getElementById('wasm-hex-dump');
+    if (!dumpEl) return;
 
-    if (!hexContainer) return;
-
-    if (status === 'ALLOCATED') {
-        statusTag.className = 'status-badge allocated';
-        statusTag.textContent = `Wasm Memory Active (0x${currentAlloc.ptr.toString(16).padStart(4, '0')})`;
-        timerTag.textContent = '메모리 상주 중';
-    } else if (status === 'ZEROIZED') {
-        statusTag.className = 'status-badge zeroized';
-        statusTag.textContent = 'Zeroized (0x00 완전 소거됨)';
-        timerTag.textContent = '소거 완료 (0x00)';
+    let bytes = [];
+    if (wasmMemoryBuffer && currentAlloc.ptr > 0) {
+        const memView = new Uint8Array(wasmMemoryBuffer.buffer);
+        bytes = Array.from(memView.subarray(currentAlloc.ptr, currentAlloc.ptr + currentAlloc.size));
+    } else {
+        bytes = currentAlloc.isZeroized ? new Array(currentAlloc.size).fill(0) : Array.from(new TextEncoder().encode(currentAlloc.text));
     }
 
-    const baseAddr = currentAlloc.ptr;
-    let html = `<div class="hex-row header-row"><span>오프셋</span><span>16진수 바이트 (Hex)</span><span>ASCII 텍스트</span></div>`;
-
+    let html = '';
     const rowSize = 16;
-    for (let i = 0; i < currentAlloc.size; i += rowSize) {
-        const slice = currentAlloc.bytes.slice(i, i + rowSize);
-        const addrStr = `0x${(baseAddr + i).toString(16).padStart(6, '0')}`;
-
-        const hexBytes = slice.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-        const asciiStr = slice.map(b => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')).join('');
+    for (let i = 0; i < bytes.length; i += rowSize) {
+        const slice = bytes.slice(i, i + rowSize);
+        const addr = `0x${(currentAlloc.ptr + i).toString(16).padStart(6, '0')}`;
+        const hex = slice.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        const ascii = slice.map(b => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')).join('');
 
         const isZero = slice.every(b => b === 0);
-        const byteClass = isZero ? 'byte-zero' : 'byte-active';
+        const cls = isZero ? 'zero' : 'active';
 
-        html += `<div class="hex-row">
-            <span class="hex-addr">${addrStr}</span>
-            <span class="hex-bytes ${byteClass}">${hexBytes.padEnd(47, ' ')}</span>
-            <span class="hex-ascii ${byteClass}">${asciiStr}</span>
+        html += `<div class="hex-line">
+            <span class="addr">${addr}</span>
+            <span class="bytes ${cls}">${hex.padEnd(47, ' ')}</span>
+            <span class="ascii ${cls}">${ascii}</span>
         </div>`;
     }
-
-    hexContainer.innerHTML = html;
+    dumpEl.innerHTML = html;
 }
 
-// 3단계: 복사 및 5초 타이머 실행
-function handleCopyAndZeroize() {
+function startZeroizeCountdown() {
     if (currentAlloc.isZeroized || !currentAlloc.text) {
         alert('메모리가 이미 소거되었습니다. 2단계에서 암호를 다시 생성해 주십시오.');
         return;
     }
 
-    // 1회용 클립보드 복사
     navigator.clipboard.writeText(currentAlloc.text).then(() => {
-        const copyBtn = document.getElementById('copy-mask-btn');
-        const timerTag = document.getElementById('zeroize-timer-tag');
-        copyBtn.disabled = true;
+        let left = 5;
+        const btn = document.getElementById('copy-mask-btn');
+        const timerEl = document.getElementById('timer-display');
+        btn.disabled = true;
 
-        countdownRemaining = 5;
         if (zeroizeTimer) clearInterval(zeroizeTimer);
-
-        timerTag.textContent = `Zeroize 카운트다운: ${countdownRemaining}초`;
+        timerEl.textContent = `소거 카운트다운: ${left}초`;
 
         zeroizeTimer = setInterval(() => {
-            countdownRemaining--;
-            if (countdownRemaining > 0) {
-                timerTag.textContent = `Zeroize 카운트다운: ${countdownRemaining}초`;
+            left--;
+            if (left > 0) {
+                timerEl.textContent = `소거 카운트다운: ${left}초`;
             } else {
                 clearInterval(zeroizeTimer);
                 zeroizeTimer = null;
-                deallocateMemory();
-                copyBtn.textContent = '메모리 소거 완료 (새 암호 생성 필요)';
+                zeroizeWasmMemory();
+                btn.textContent = '메모리 소거 완료';
             }
         }, 1000);
-    }).catch(err => {
-        console.error('클립보드 접근 실패:', err);
-        // 클립보드 권한 실패 시에도 카운트다운 정상 진행
-        deallocateMemory();
+    }).catch(() => {
+        zeroizeWasmMemory();
     });
 }
 
-// 50대 사이트 테이블 렌더링
-function renderBenchmarkTable(filterText = '') {
-    const tbody = document.getElementById('benchmark-tbody');
-    if (!tbody) return;
-
+function renderTable(filter = '') {
+    const tbody = document.getElementById('benchmark-table-body');
     const filtered = BENCHMARK_DATA.siteDetails.filter(s =>
-        s.domain.toLowerCase().includes(filterText.toLowerCase()) ||
-        s.category.toLowerCase().includes(filterText.toLowerCase())
+        s.domain.toLowerCase().includes(filter.toLowerCase()) ||
+        s.category.toLowerCase().includes(filter.toLowerCase())
     );
 
     let html = '';
-    filtered.forEach((site, idx) => {
-        const isKeypad = site.blockedByVirtualKeypad;
-        const loss = site.entropyLossPercent;
-        const lossClass = loss > 0 ? 'text-amber font-bold' : 'text-gray';
-        const keypadBadge = isKeypad ? '<span class="badge danger">차단 (가상키패드)</span>' : '<span class="badge success">표준 DOM</span>';
+    filtered.forEach((s, idx) => {
+        const loss = s.entropyLossPercent;
+        const lossStr = loss > 0 ? `<span style="color: var(--amber); font-weight:600;">-${loss.toFixed(1)}%</span>` : `<span style="color: var(--text-muted);">0.0%</span>`;
+        const keypadStr = s.blockedByVirtualKeypad ? `<span style="color: var(--rose); font-weight:600;">차단</span>` : `<span style="color: var(--text-muted);">허용</span>`;
 
-        html += `
-            <tr class="table-row" data-domain="${site.domain}">
-                <td>${idx + 1}</td>
-                <td><button class="domain-select-btn" data-domain="${site.domain}"><strong>${site.domain}</strong></button></td>
-                <td>${site.category}</td>
-                <td>${site.maxPasswordLength}자</td>
-                <td>${site.entropyBits.toFixed(2)} bits</td>
-                <td class="${lossClass}">-${loss.toFixed(1)}%</td>
-                <td>${keypadBadge}</td>
-            </tr>
-        `;
+        html += `<tr>
+            <td>${idx + 1}</td>
+            <td><button class="tbl-btn" data-domain="${s.domain}">${s.domain}</button></td>
+            <td>${s.category}</td>
+            <td>${s.maxPasswordLength}자</td>
+            <td>${s.entropyBits.toFixed(2)}</td>
+            <td>${lossStr}</td>
+            <td>${keypadStr}</td>
+        </tr>`;
     });
-
     tbody.innerHTML = html;
 
-    // 행 내 버튼 이벤트 바인딩
-    tbody.querySelectorAll('.domain-select-btn').forEach(btn => {
+    tbody.querySelectorAll('.tbl-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const domain = e.currentTarget.dataset.domain;
-            selectDomain(domain);
+            selectDomain(e.currentTarget.dataset.domain);
         });
     });
 }
 
-// 도메인 선택 처리
 function selectDomain(domain) {
-    const targetInput = document.getElementById('target-domain-input');
-    targetInput.value = domain;
-    const site = lookupDomain(domain);
-    renderDomainDiagnosis(site, domain);
-    handleGeneratePassword();
-    window.scrollTo({ top: 350, behavior: 'smooth' });
+    document.getElementById('target-domain-input').value = domain;
+    document.querySelectorAll('.chip-btn').forEach(c => {
+        c.classList.toggle('active', c.dataset.domain === domain);
+    });
+    renderDiagnosis(domain);
+    runGenerate();
 }
 
-// 이벤트 초기화
-function setupEvents() {
-    // 빠른 도메인 선택 칩
-    document.querySelectorAll('.preset-chip').forEach(chip => {
-        chip.addEventListener('click', (e) => {
-            const domain = e.currentTarget.dataset.domain;
-            selectDomain(domain);
+function initEvents() {
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            selectDomain(e.currentTarget.dataset.domain);
         });
     });
 
-    // 도메인 입력 변경
-    const targetInput = document.getElementById('target-domain-input');
-    targetInput.addEventListener('input', (e) => {
-        const domain = e.target.value.trim();
-        const site = lookupDomain(domain);
-        renderDomainDiagnosis(site, domain);
+    document.getElementById('target-domain-input').addEventListener('input', (e) => {
+        renderDiagnosis(e.target.value.trim());
     });
 
-    // 암호 생성 버튼
-    document.getElementById('generate-pw-btn').addEventListener('click', () => {
-        handleGeneratePassword();
-    });
-
-    // 3단계 복사 및 Zeroize 버튼
-    document.getElementById('copy-mask-btn').addEventListener('click', () => {
-        handleCopyAndZeroize();
-    });
-
-    // 즉시 제로화 강제 버튼
+    document.getElementById('generate-pw-btn').addEventListener('click', runGenerate);
+    document.getElementById('copy-mask-btn').addEventListener('click', startZeroizeCountdown);
     document.getElementById('force-zeroize-btn').addEventListener('click', () => {
-        if (zeroizeTimer) {
-            clearInterval(zeroizeTimer);
-            zeroizeTimer = null;
-        }
-        deallocateMemory();
+        if (zeroizeTimer) clearInterval(zeroizeTimer);
+        zeroizeWasmMemory();
     });
 
-    // 벤치마크 검색 입력
-    const searchInput = document.getElementById('benchmark-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            renderBenchmarkTable(e.target.value);
-        });
-    }
+    document.getElementById('table-search-input').addEventListener('input', (e) => {
+        renderTable(e.target.value);
+    });
 
-    // 모의 로그인 폼 제출
-    const mockLoginForm = document.getElementById('mock-login-form');
-    if (mockLoginForm) {
-        mockLoginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const val = document.getElementById('mock-password-input').value;
-            const resEl = document.getElementById('mock-login-result');
-            if (!val) {
-                resEl.className = 'mock-result error';
-                resEl.textContent = '비밀번호를 붙여넣은 후 테스트해 주십시오.';
-            } else {
-                resEl.className = 'mock-result success';
-                resEl.textContent = `모의 로그인 성공: ${val.length}자리 암호 정상 전달됨.`;
-            }
-        });
-    }
+    document.getElementById('mock-submit-btn').addEventListener('click', () => {
+        const val = document.getElementById('mock-login-input').value;
+        const msg = document.getElementById('mock-login-msg');
+        if (!val) {
+            msg.style.color = 'var(--rose)';
+            msg.textContent = '붙여넣기 후 제출해 주십시오.';
+        } else {
+            msg.style.color = 'var(--emerald)';
+            msg.textContent = `전달 완료 (${val.length}자)`;
+        }
+    });
 }
 
-// 초기 로드 진입점
 window.addEventListener('DOMContentLoaded', async () => {
-    await setupWasm();
-    setupEvents();
-    renderBenchmarkTable();
-
-    // 초기 네이버(naver.com) 진단 기본 로드
+    await initWasmEngine();
+    initEvents();
+    renderTable();
     selectDomain('naver.com');
 });
-
 </script>
 </body>
 </html>
