@@ -6,31 +6,32 @@
     <title>PrfVault Playground · 비표준 인증 보안 인터페이스 실증</title>
     <style>
         :root {
-            --bg: #09090b;
-            --surface: #141417;
-            --surface-hover: #1c1c20;
-            --border: #27272a;
-            --border-subtle: #18181b;
-            --text-title: #fafafa;
-            --text-body: #d4d4d8;
-            --text-muted: #71717a;
-            --accent: #fafafa;
-            --accent-hover: #e4e4e7;
-            --accent-contrast: #09090b;
-            --amber: #d97706;
-            --amber-dim: rgba(217, 119, 6, 0.08);
+            --bg: #090a0f;
+            --surface: #12151f;
+            --surface-hover: #1a1e2d;
+            --border: #262c3d;
+            --border-subtle: #191e2b;
+            --text-title: #ffffff;
+            --text-body: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --accent-dim: rgba(56, 189, 248, 0.12);
+            --amber: #f59e0b;
+            --amber-dim: rgba(245, 158, 11, 0.12);
             --amber-text: #fef3c7;
             --emerald: #10b981;
-            --emerald-dim: rgba(16, 185, 129, 0.08);
+            --emerald-dim: rgba(16, 185, 129, 0.12);
             --emerald-text: #d1fae5;
-            --rose: #e11d48;
-            --rose-dim: rgba(225, 29, 72, 0.08);
+            --rose: #f43f5e;
+            --rose-dim: rgba(244, 63, 94, 0.12);
             --rose-text: #ffe4e6;
-            --terminal-bg: #050507;
-            --track-bg: #1c1c21;
-            --byte-zero: #3f3f46;
-            --ascii-active: #a7f3d0;
-            --ascii-zero: #27272a;
+            --terminal-bg: #05070c;
+            --track-bg: #1e2433;
+            --byte-zero: #475569;
+            --ascii-active: #86efac;
+            --ascii-zero: #1e293b;
             --mono: "SF Mono", Monaco, Consolas, "Liberation Mono", Courier, monospace;
         }
 
@@ -51,7 +52,7 @@
             margin: 0 auto;
         }
 
-        /* 헤더: 여백과 절제된 흑백 타이포그래피 */
+        /* 헤더: 고대비 타이포그래피 */
         header.wb-header {
             margin-bottom: 56px;
             padding-bottom: 40px;
@@ -59,11 +60,11 @@
         }
 
         .meta-eyebrow {
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.1em;
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: var(--text-muted);
+            color: var(--accent);
             margin-bottom: 14px;
         }
 
@@ -77,26 +78,26 @@
         }
 
         .purpose-statement {
-            font-size: 15.5px;
-            color: #a1a1aa;
+            font-size: 16px;
+            color: var(--text-secondary);
             line-height: 1.75;
             padding-left: 20px;
-            border-left: 3px solid var(--text-muted);
+            border-left: 3px solid var(--accent);
         }
 
         .wasm-pill {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-size: 12.5px;
+            font-size: 13px;
             font-family: var(--mono);
-            color: var(--text-muted);
+            color: var(--text-secondary);
             margin-top: 22px;
         }
 
         .status-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background-color: var(--emerald);
         }
@@ -117,13 +118,13 @@
         .section-label {
             font-size: 13.5px;
             font-weight: 700;
-            color: var(--text-title);
+            color: var(--accent);
             font-family: var(--mono);
             letter-spacing: 0.08em;
         }
 
         .section-desc {
-            font-size: 13.5px;
+            font-size: 14px;
             color: var(--text-muted);
         }
 
@@ -138,23 +139,25 @@
         .chip-btn {
             background: transparent;
             border: 1px solid var(--border);
-            color: var(--text-muted);
+            color: var(--text-secondary);
             font-size: 13px;
-            padding: 6px 14px;
+            padding: 7px 14px;
             border-radius: 5px;
             cursor: pointer;
             transition: all 0.15s;
         }
 
         .chip-btn:hover {
-            border-color: var(--text-muted);
+            border-color: var(--accent);
             color: var(--text-title);
+            background: var(--accent-dim);
         }
 
         .chip-btn.active {
-            border-color: var(--text-title);
-            color: var(--text-title);
-            background: var(--surface);
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+            font-weight: 600;
         }
 
         .input-row {
@@ -167,14 +170,14 @@
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text-title);
-            font-size: 14.5px;
-            padding: 11px 15px;
+            font-size: 15px;
+            padding: 11px 16px;
             border-radius: 5px;
             outline: none;
             transition: border-color 0.15s;
         }
 
-        input:focus { border-color: var(--text-muted); }
+        input:focus { border-color: var(--accent); }
 
         .domain-input { flex: 1; }
 
@@ -182,9 +185,9 @@
             margin-top: 18px;
             padding: 16px 20px;
             border-left: 3px solid var(--border);
-            font-size: 14px;
-            line-height: 1.6;
-            border-radius: 0 4px 4px 0;
+            font-size: 14.5px;
+            line-height: 1.65;
+            border-radius: 0 5px 5px 0;
         }
 
         .diag-feedback.warning {
@@ -208,7 +211,7 @@
         /* 2단계: 적응형 암호화 & 엔트로피 지표 */
         .gen-grid {
             display: grid;
-            grid-template-columns: 1.15fr 1fr;
+            grid-template-columns: 1.1fr 1fr;
             gap: 48px;
             align-items: start;
         }
@@ -221,17 +224,18 @@
 
         .field label {
             display: block;
-            font-size: 13px;
-            color: var(--text-muted);
+            font-size: 13.5px;
+            color: var(--text-secondary);
             margin-bottom: 8px;
+            font-weight: 500;
         }
 
-        /* 모던 미니멀 솔리드 화이트 버튼 (Apple/Vercel 스타일) */
+        /* 하늘색 강조 버튼 */
         .btn-action {
             background: var(--accent);
-            color: var(--accent-contrast);
-            font-weight: 600;
-            font-size: 13.5px;
+            color: #090b10;
+            font-weight: 700;
+            font-size: 14px;
             padding: 11px 20px;
             border: none;
             border-radius: 5px;
@@ -251,7 +255,7 @@
             background: transparent;
             border: 1px solid var(--border);
             color: var(--text-body);
-            font-size: 13px;
+            font-size: 13.5px;
             padding: 10px 16px;
             border-radius: 5px;
             cursor: pointer;
@@ -260,15 +264,15 @@
         }
 
         .btn-secondary:hover {
-            border-color: var(--text-muted);
+            border-color: var(--accent);
             color: var(--text-title);
         }
 
         .pw-output {
             font-family: var(--mono);
-            color: var(--text-title);
-            font-size: 15px;
-            font-weight: 600;
+            color: var(--accent);
+            font-size: 16px;
+            font-weight: 700;
             width: 100%;
             letter-spacing: 0.04em;
         }
@@ -280,12 +284,13 @@
         .bar-head {
             display: flex;
             justify-content: space-between;
-            font-size: 13px;
+            font-size: 13.5px;
             margin-bottom: 8px;
+            color: var(--text-secondary);
         }
 
         .track {
-            height: 8px;
+            height: 9px;
             background: var(--track-bg);
             border-radius: 4px;
             overflow: hidden;
@@ -302,25 +307,26 @@
         }
 
         .stat-item .stat-num {
-            font-size: 20px;
+            font-size: 21px;
             font-weight: 700;
             color: var(--text-title);
+            line-height: 1.3;
         }
 
         .stat-item .stat-lbl {
-            font-size: 12px;
+            font-size: 12.5px;
             color: var(--text-muted);
             margin-top: 4px;
         }
 
-        /* 3단계: Wasm 선형 메모리 헥스 덤프 콘솔 (차분한 흑백 톤) */
+        /* 3단계: Wasm 선형 메모리 콘솔 터미널 */
         .terminal-box {
             background: var(--terminal-bg);
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 20px 24px;
             font-family: var(--mono);
-            font-size: 13px;
+            font-size: 13.5px;
             margin-top: 16px;
         }
 
@@ -332,24 +338,24 @@
             padding-bottom: 12px;
             margin-bottom: 14px;
             color: var(--text-muted);
-            font-size: 12px;
+            font-size: 12.5px;
         }
 
         .hex-dump {
             max-height: 220px;
             overflow-x: auto;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             line-height: 1.75;
         }
 
         .hex-line {
             display: grid;
-            grid-template-columns: 95px 1fr 150px;
+            grid-template-columns: 100px 1fr 160px;
             gap: 20px;
         }
 
         .addr { color: var(--text-muted); }
-        .bytes.active { color: var(--text-title); }
+        .bytes.active { color: var(--accent); font-weight: 600; }
         .bytes.zero { color: var(--byte-zero); }
         .ascii.active { color: var(--ascii-active); }
         .ascii.zero { color: var(--ascii-zero); }
@@ -365,8 +371,9 @@
 
         .timer-info {
             font-family: var(--mono);
-            font-size: 13px;
+            font-size: 13.5px;
             color: var(--amber);
+            font-weight: 600;
         }
 
         .mock-login-inline {
@@ -405,7 +412,7 @@
         table.flat-table td {
             padding: 10px 14px;
             border-bottom: 1px solid var(--border-subtle);
-            color: var(--text-muted);
+            color: var(--text-secondary);
         }
 
         table.flat-table tr:hover td {
@@ -416,11 +423,11 @@
         .tbl-btn {
             background: none;
             border: none;
-            color: var(--text-title);
+            color: var(--accent);
             cursor: pointer;
             font-family: inherit;
             font-size: 13.5px;
-            font-weight: 500;
+            font-weight: 600;
             padding: 0;
         }
 
@@ -430,7 +437,7 @@
             margin-top: 64px;
             padding-top: 28px;
             border-top: 1px solid var(--border-subtle);
-            font-size: 12.5px;
+            font-size: 13px;
             color: var(--text-muted);
             display: flex;
             justify-content: space-between;
@@ -471,7 +478,7 @@
 
         <div class="input-row">
             <input type="text" id="target-domain-input" class="domain-input" value="naver.com" placeholder="도메인을 입력하거나 위 목록을 클릭하십시오">
-            <div style="font-family: var(--mono); font-size: 13px; color: var(--text-muted);" id="domain-quick-metric">
+            <div style="font-family: var(--mono); font-size: 13.5px; color: var(--text-secondary);" id="domain-quick-metric">
                 L=16 · 104.87 bits · 키패드 없음
             </div>
         </div>
@@ -512,10 +519,10 @@
                 <div class="bar-group">
                     <div class="bar-head">
                         <span>현재 암호 엔트로피 (<span id="len-label">16</span>자)</span>
-                        <strong id="current-entropy-bits" style="color: var(--amber);">104.87 bits</strong>
+                        <strong id="current-entropy-bits" style="color: var(--accent);">104.87 bits</strong>
                     </div>
                     <div class="track">
-                        <div id="current-entropy-bar" class="fill" style="width: 52%; background: var(--amber);"></div>
+                        <div id="current-entropy-bar" class="fill" style="width: 52%; background: var(--accent);"></div>
                     </div>
                 </div>
 
@@ -534,10 +541,13 @@
                         <div class="stat-num" id="current-loss-stat" style="color: var(--rose);">-20.0%</div>
                         <div class="stat-lbl">NIST 대비 결손율</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-num" id="current-crack-stat">5.89e+13 년</div>
-                        <div class="stat-lbl">GPU 오프라인 크랙 시간</div>
+                    <div class="stat-item" style="flex: 1;">
+                        <div class="stat-num" id="current-crack-stat" style="font-size: 19px;">약 58조 9,104억 년</div>
+                        <div class="stat-lbl">GPU 오프라인 크랙 예상 시간 (초당 100억 회 추정)</div>
                     </div>
+                </div>
+                <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 10px;">
+                    * NIST 20자 권고치 크랙 시간: <span id="nist-crack-stat" style="color: var(--text-secondary); font-weight: 600;">약 45해 9,791경 년</span>
                 </div>
             </div>
         </div>
@@ -554,9 +564,9 @@
             <div class="terminal-bar">
                 <div>
                     <span>TARGET BUFFER: </span>
-                    <span id="mem-ptr-info" style="color: var(--text-title);">0x1000 (Allocated)</span>
+                    <span id="mem-ptr-info" style="color: var(--text-title); font-weight: 600;">0x1000 (Allocated)</span>
                 </div>
-                <div id="mem-status-pill" style="color: var(--emerald); font-weight: 600;">STATUS: ACTIVE IN WASM MEMORY</div>
+                <div id="mem-status-pill" style="color: var(--emerald); font-weight: 700;">STATUS: ACTIVE IN WASM MEMORY</div>
             </div>
 
             <div class="hex-dump" id="wasm-hex-dump"></div>
@@ -571,10 +581,10 @@
         </div>
 
         <div class="mock-login-inline">
-            <span style="font-size: 13px; color: var(--text-muted);">가상 로그인 검증:</span>
-            <input type="password" id="mock-login-input" placeholder="Ctrl+V 로 붙여넣기" style="flex: 1; max-width: 260px; font-size: 13px;">
+            <span style="font-size: 13.5px; color: var(--text-secondary);">가상 로그인 검증:</span>
+            <input type="password" id="mock-login-input" placeholder="Ctrl+V 로 붙여넣기" style="flex: 1; max-width: 260px; font-size: 13.5px;">
             <button id="mock-submit-btn" class="btn-secondary">제출 확인</button>
-            <span id="mock-login-msg" style="font-size: 13px;"></span>
+            <span id="mock-login-msg" style="font-size: 13.5px;"></span>
         </div>
     </section>
 
@@ -585,7 +595,7 @@
             <span class="section-desc">국내 트래픽 상위 50대 웹사이트 Playwright 전수 스캔 실측치</span>
         </div>
 
-        <input type="text" id="table-search-input" placeholder="도메인 또는 산업군(portal, banking, securities, fintech...) 필터링..." style="width: 100%; margin-bottom: 12px;">
+        <input type="text" id="table-search-input" placeholder="도메인 또는 산업군(portal, banking, securities, fintech...) 필터링..." style="width: 100%; margin-bottom: 14px;">
 
         <div class="table-wrap">
             <table class="flat-table">
@@ -717,16 +727,42 @@ async function generateAdaptivePassword(masterSecret, domain, length) {
     return picks.join('');
 }
 
-function formatCrackTime(seconds) {
+// 한국어 큰 수 포맷터 (숫자 세는 소요 원천 차단)
+function formatKoreanCrackTime(seconds) {
     if (!seconds || seconds <= 0) return '0초';
-    if (seconds < 1) return `${(seconds * 1000).toFixed(1)}ms`;
-    if (seconds < 60) return `${seconds.toFixed(1)}초`;
-    if (seconds < 3600) return `${(seconds / 60).toFixed(1)}분`;
-    if (seconds < 86400) return `${(seconds / 3600).toFixed(1)}시간`;
-    if (seconds < 31536000) return `${(seconds / 86400).toFixed(1)}일`;
-    const y = seconds / 31536000;
-    if (y > 1e12) return `${y.toExponential(2)}년`;
-    return `${y.toLocaleString(undefined, { maximumFractionDigits: 1 })}년`;
+    if (seconds < 1) return `${(seconds * 1000).toFixed(1)} 밀리초`;
+    if (seconds < 60) return `${seconds.toFixed(1)} 초`;
+    if (seconds < 3600) return `${(seconds / 60).toFixed(1)} 분`;
+    if (seconds < 86400) return `${(seconds / 3600).toFixed(1)} 시간`;
+    if (seconds < 31536000) return `${(seconds / 86400).toFixed(1)} 일`;
+
+    const years = seconds / 31536000;
+    if (years < 10000) {
+        return `약 ${Math.round(years).toLocaleString()} 년`;
+    }
+
+    const units = [
+        [1e28, '양'],
+        [1e24, '자'],
+        [1e20, '해'],
+        [1e16, '경'],
+        [1e12, '조'],
+        [1e8, '억'],
+        [1e4, '만']
+    ];
+
+    let rem = years;
+    const parts = [];
+    for (const [factor, name] of units) {
+        if (rem >= factor) {
+            const count = Math.floor(rem / factor);
+            rem = rem % factor;
+            parts.push(`${count.toLocaleString()}${name}`);
+            if (parts.length >= 2) break;
+        }
+    }
+
+    return `약 ${parts.join(' ')} 년`;
 }
 
 function lookupDomain(domainInput) {
@@ -750,7 +786,7 @@ function renderDiagnosis(domain) {
     const fb = document.getElementById('diag-feedback-box');
     if (site && (site.domain === 'naver.com' || site.domain === 'kt.com')) {
         fb.className = 'diag-feedback warning';
-        fb.innerHTML = `<strong>${site.domain} 비표준 제약 감지:</strong> 최대 16자 제한으로 NIST 표준(131.09 bits) 대비 정확히 <strong>20.0% (${(131.09 - entropy).toFixed(2)} bits) 엔트로피 결손</strong> 강제. GPU 오프라인 크랙 시간이 7,800만 배 단축됩니다.`;
+        fb.innerHTML = `<strong>${site.domain} 비표준 제약 감지:</strong> 최대 16자 제한으로 NIST 표준(131.09 bits) 대비 정확히 <strong>20.0% (${(131.09 - entropy).toFixed(2)} bits) 엔트로피 결손</strong> 강제. GPU 오프라인 크랙 시간이 약 7,800만 배 단축됩니다.`;
     } else if (isKeypad) {
         fb.className = 'diag-feedback danger';
         fb.innerHTML = `<strong>${site ? site.domain : domain} 가상 키패드 차단 감지:</strong> 마우스 입력을 강제하여 브라우저 자동 완성을 차단합니다. <strong>3단계: 1회용 마스킹 복사 및 5초 Wasm Zeroize 소거</strong>로 전환하십시오.`;
@@ -774,14 +810,16 @@ async function runGenerate() {
     const entropy = len * Math.log2(94);
     const loss = Math.max(0, ((NIST_STD_ENTROPY - entropy) / NIST_STD_ENTROPY) * 100);
     const crackSec = Math.pow(2, entropy - 1) / GPU_RATE;
+    const stdCrackSec = Math.pow(2, NIST_STD_ENTROPY - 1) / GPU_RATE;
 
     document.getElementById('current-entropy-bits').textContent = `${entropy.toFixed(2)} bits`;
     document.getElementById('current-loss-stat').textContent = `-${loss.toFixed(1)}%`;
-    document.getElementById('current-crack-stat').textContent = formatCrackTime(crackSec);
+    document.getElementById('current-crack-stat').textContent = formatKoreanCrackTime(crackSec);
+    document.getElementById('nist-crack-stat').textContent = formatKoreanCrackTime(stdCrackSec);
 
     const maxBar = 200;
     document.getElementById('current-entropy-bar').style.width = `${Math.min(100, (entropy / maxBar) * 100)}%`;
-    document.getElementById('current-entropy-bar').style.background = loss > 0 ? 'var(--amber)' : 'var(--emerald)';
+    document.getElementById('current-entropy-bar').style.background = 'var(--accent)';
 
     writeToWasmMemory(pw);
 }
@@ -907,8 +945,8 @@ function renderTable(filter = '') {
     let html = '';
     filtered.forEach((s, idx) => {
         const loss = s.entropyLossPercent;
-        const lossStr = loss > 0 ? `<span style="color: var(--amber); font-weight:600;">-${loss.toFixed(1)}%</span>` : `<span style="color: var(--text-muted);">0.0%</span>`;
-        const keypadStr = s.blockedByVirtualKeypad ? `<span style="color: var(--rose); font-weight:600;">차단</span>` : `<span style="color: var(--text-muted);">허용</span>`;
+        const lossStr = loss > 0 ? `<span style="color: var(--amber); font-weight:700;">-${loss.toFixed(1)}%</span>` : `<span style="color: var(--text-muted);">0.0%</span>`;
+        const keypadStr = s.blockedByVirtualKeypad ? `<span style="color: var(--rose); font-weight:700;">차단</span>` : `<span style="color: var(--text-muted);">허용</span>`;
 
         html += `<tr>
             <td>${idx + 1}</td>
