@@ -877,11 +877,6 @@ async function generateAdaptivePassword(masterSecret, domain, length) {{
     return picks.join('');
 }}
 
-function toSuperscript(num) {{
-    const map = {{ '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '-': '⁻' }};
-    return String(num).split('').map(c => map[c] || c).join('');
-}}
-
 function formatKoreanCrackTime(seconds, entropy) {{
     if (!entropy || entropy <= 0) return '0초';
 
@@ -927,12 +922,8 @@ function formatKoreanCrackTime(seconds, entropy) {{
         {{ exp: 4, name: '만' }}
     ];
 
-    const expFloor = Math.floor(log10Years);
-    const mantissa = Math.pow(10, log10Years - expFloor);
-    const sciNotation = `${{mantissa.toFixed(2)}} × 10${{toSuperscript(expFloor)}} 년`;
-
     if (log10Years >= 72) {{
-        return `약 ${{sciNotation}} (무량대수 초과)`;
+        return '약 1만 무량대수 년 이상';
     }}
 
     let primaryUnit = null;
@@ -962,11 +953,7 @@ function formatKoreanCrackTime(seconds, entropy) {{
         }}
     }}
 
-    const koreanStr = parts.join(' ');
-    if (log10Years >= 20) {{
-        return `약 ${{koreanStr}} 년 (${{sciNotation}})`;
-    }}
-    return `약 ${{koreanStr}} 년`;
+    return `약 ${{parts.join(' ')}} 년`;
 }}
 
 function openUnitModal() {{
