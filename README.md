@@ -88,6 +88,11 @@ W3C WebAuthn Level 3 PRF 확장의 브라우저 지원 파편화와 운영체제
 
 ## 4. 국내 50대 웹사이트 보안 실태 벤치마크 실측 결과
 
+* **연구 논문 전문**: [국내 50대 웹사이트의 비표준 인증 보안 인터페이스가 브라우저 패스워드 매니저 및 암호 엔트로피에 미치는 영향 실증](submission/T10-PrfVault-Submission/PAPER.md)
+* **논문 실측 반영 대표작 애플리케이션**: [PrfVault Web Playground](apps/web-playground/index.html)
+  > *"국내 웹 서비스를 이용하는 사용자가 네이버·KT의 16자 제한이나 금융권 가상 키패드 등 비표준 보안 인터페이스를 마주할 때, 본 앱이 사이트 제약을 자동 진단하여 94개 복합 문자군 기반 적응형 고엔트로피 비밀번호를 생성하고 가상 키패드용 1회용 마스킹 복사 및 Wasm 메모리 소거(Zeroize)로 계정을 보호해 준다."*
+* **실행 묶음 (ZIP)**: [PrfVault-Web-Playground.zip](submission/T12-BRB-Submission/PrfVault-Web-Playground.zip) (새 임시 폴더에서 즉시 실행)
+
 Playwright 헤드리스 브라우저 자동화 도구를 사용해 국내 50대 주요 웹사이트(금융, 공공, 포털, 이커머스 등)를 전수 스캔한 실측 결과입니다.
 
 ### 4.1 핵심 정량 지표
