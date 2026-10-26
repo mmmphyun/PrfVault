@@ -6,18 +6,28 @@
     <title>PrfVault Playground · 비표준 인증 보안 인터페이스 실증</title>
     <style>
         :root {
-            --bg: #090a0f;
-            --surface: #12151f;
-            --surface-hover: #1a1e2d;
-            --border: #262c3d;
-            --border-subtle: #191e2b;
+            /* 완전 무채색(푸른끼 0%) 흑백 & 뉴트럴 그레이 */
+            --bg: #0c0c0c;
+            --surface: #171717;
+            --surface-hover: #222222;
+            --border: #2a2a2a;
+            --border-subtle: #1c1c1c;
+            --terminal-bg: #080808;
+            --track-bg: #222222;
+            --byte-zero: #444444;
+
+            /* 선명한 고대비 화이트 & 슬레이트 */
             --text-title: #ffffff;
-            --text-body: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
+            --text-body: #f3f4f6;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
+
+            /* 오직 강조 요소에만 사용하는 하늘색 */
             --accent: #38bdf8;
             --accent-hover: #0ea5e9;
             --accent-dim: rgba(56, 189, 248, 0.12);
+
+            /* 상태 피드백 */
             --amber: #f59e0b;
             --amber-dim: rgba(245, 158, 11, 0.12);
             --amber-text: #fef3c7;
@@ -27,11 +37,8 @@
             --rose: #f43f5e;
             --rose-dim: rgba(244, 63, 94, 0.12);
             --rose-text: #ffe4e6;
-            --terminal-bg: #05070c;
-            --track-bg: #1e2433;
-            --byte-zero: #475569;
             --ascii-active: #86efac;
-            --ascii-zero: #1e293b;
+            --ascii-zero: #222222;
             --mono: "SF Mono", Monaco, Consolas, "Liberation Mono", Courier, monospace;
         }
 
@@ -52,7 +59,7 @@
             margin: 0 auto;
         }
 
-        /* 헤더: 고대비 타이포그래피 */
+        /* 헤더: 순수 무채색 배경 위 고대비 타이포그래피 */
         header.wb-header {
             margin-bottom: 56px;
             padding-bottom: 40px;
@@ -128,7 +135,7 @@
             color: var(--text-muted);
         }
 
-        /* 1단계: 도메인 칩 및 입력 */
+        /* 1단계: 순수 그레이 칩 버튼 */
         .chip-group {
             display: flex;
             flex-wrap: wrap;
@@ -137,7 +144,7 @@
         }
 
         .chip-btn {
-            background: transparent;
+            background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text-secondary);
             font-size: 13px;
@@ -150,13 +157,12 @@
         .chip-btn:hover {
             border-color: var(--accent);
             color: var(--text-title);
-            background: var(--accent-dim);
         }
 
         .chip-btn.active {
             border-color: var(--accent);
             color: var(--accent);
-            background: var(--accent-dim);
+            background: var(--surface-hover);
             font-weight: 600;
         }
 
@@ -188,6 +194,7 @@
             font-size: 14.5px;
             line-height: 1.65;
             border-radius: 0 5px 5px 0;
+            background: var(--surface);
         }
 
         .diag-feedback.warning {
@@ -230,10 +237,9 @@
             font-weight: 500;
         }
 
-        /* 하늘색 강조 버튼 */
         .btn-action {
             background: var(--accent);
-            color: #090b10;
+            color: #0c0c0c;
             font-weight: 700;
             font-size: 14px;
             padding: 11px 20px;
@@ -252,7 +258,7 @@
         }
 
         .btn-secondary {
-            background: transparent;
+            background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text-body);
             font-size: 13.5px;
@@ -319,7 +325,7 @@
             margin-top: 4px;
         }
 
-        /* 3단계: Wasm 선형 메모리 콘솔 터미널 */
+        /* 3단계: 순수 흑색 콘솔 터미널 */
         .terminal-box {
             background: var(--terminal-bg);
             border: 1px solid var(--border);
@@ -727,7 +733,6 @@ async function generateAdaptivePassword(masterSecret, domain, length) {
     return picks.join('');
 }
 
-// 한국어 큰 수 포맷터 (숫자 세는 소요 원천 차단)
 function formatKoreanCrackTime(seconds) {
     if (!seconds || seconds <= 0) return '0초';
     if (seconds < 1) return `${(seconds * 1000).toFixed(1)} 밀리초`;
