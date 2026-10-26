@@ -5,7 +5,7 @@
 - **제출 과제**: BR-B · 마지막 B · 내 논문을 반영한 애플리케이션
 - **작성자**: mmmphyun
 - **반영 논문**: 《국내 50대 웹사이트의 비표준 인증 보안 인터페이스가 브라우저 패스워드 매니저 및 암호 엔트로피에 미치는 영향 실증》 (과제 10번 제출 논문)
-- **결과물 실행 묶음 (ZIP)**: `submission/T12-BRB-Submission/PrfVault-Web-Playground.zip` (46,127 바이트, 암호 없음)
+- **결과물 실행 묶음 (ZIP)**: `submission/T12-BRB-Submission/PrfVault-Web-Playground.zip` (84,762 바이트, 암호 없음)
 - **12번 사이트 대표작 연결**: `PrfVault Web Playground` (포트폴리오 대표작 링크 연동 완료)
 
 ---
