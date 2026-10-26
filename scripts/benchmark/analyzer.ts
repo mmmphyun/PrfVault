@@ -14,7 +14,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { type SiteCategory } from './targets.ts';
-import { type ScanResult } from './scanner.ts';
+import type { ScanResult } from './scanner.ts';
 
 /**
  * 표준 엔트로피 기준 상수 정의
