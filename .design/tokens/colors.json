@@ -1,0 +1,27 @@
+{
+  "background": {
+    "primary": "#0a0a0a",
+    "secondary": "#121212",
+    "surface": "#171717"
+  },
+  "text": {
+    "primary": "#e5e5e5",
+    "secondary": "#a3a3a3",
+    "muted": "#525252"
+  },
+  "accent": {
+    "primary": "#f59e0b",
+    "hover": "#d97706"
+  },
+  "border": {
+    "subtle": "#1c1c1c",
+    "default": "#262626",
+    "strong": "#404040"
+  },
+  "status": {
+    "success": "#84cc16",
+    "warning": "#f59e0b",
+    "error": "#ef4444",
+    "info": "#06b6d4"
+  }
+}

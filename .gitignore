@@ -82,3 +82,10 @@ HANDOVER.md
 
 # Temporary work directories
 _workspace/
+
+# Design Reference
+design/screenshots/*
+!design/screenshots/.gitkeep
+design/fonts/*.woff2
+design/fonts/*.woff
+design/fonts/*.ttf
